@@ -1,0 +1,78 @@
+<?php
+
+namespace {{namespace}}\Console\Commands;
+
+use Illuminate\Console\Command;
+use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Str;
+
+class MakeProviderCommand extends Command
+{
+    protected $signature = 'make:provider {name : The name of the service provider}';
+
+    protected $description = 'Create a new service provider class';
+
+    protected Filesystem $filesystem;
+
+    public function __construct(Filesystem $filesystem)
+    {
+        parent::__construct();
+        $this->filesystem = $filesystem;
+    }
+
+    public function handle(): int
+    {
+        $name = $this->argument('name');
+        $className = Str::studly($name);
+
+        $path = {{constantPrefix}}_PATH . "app/Providers/{$className}.php";
+        $this->ensureDirectoryExists(dirname($path));
+
+        if ($this->filesystem->exists($path)) {
+            $this->components->error("Provider [{$className}] already exists!");
+            return Command::FAILURE;
+        }
+
+        $this->filesystem->put($path, $this->getStub($className));
+        $this->components->info("Provider [{$className}] created successfully.");
+
+        return Command::SUCCESS;
+    }
+
+    protected function ensureDirectoryExists(string $path): void
+    {
+        if (!$this->filesystem->isDirectory($path)) {
+            $this->filesystem->makeDirectory($path, 0755, true);
+        }
+    }
+
+    protected function getStub(string $className): string
+    {
+        return <<<PHP
+<?php
+
+namespace {{namespace}}\Providers;
+
+use Illuminate\Support\ServiceProvider;
+
+class {$className} extends ServiceProvider
+{
+    /**
+     * Register services.
+     */
+    public function register(): void
+    {
+        //
+    }
+
+    /**
+     * Bootstrap services.
+     */
+    public function boot(): void
+    {
+        //
+    }
+}
+PHP;
+    }
+}

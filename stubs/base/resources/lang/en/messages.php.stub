@@ -1,0 +1,15 @@
+<?php
+
+return [
+    'success' => 'Operation successful.',
+    'error' => 'An error occurred.',
+    'save' => 'Save',
+    'cancel' => 'Cancel',
+    'delete' => 'Delete',
+    'edit' => 'Edit',
+    'update' => 'Update',
+    'create' => 'Create',
+    'search' => 'Search',
+    'not_found' => 'Not found.',
+    'unauthorized' => 'Unauthorized action.',
+];

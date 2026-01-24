@@ -1,0 +1,61 @@
+{
+    "name": "andexer/wp-laracode",
+    "description": "Create isolated, modern WordPress plugins using Laravel's power without conflicts.",
+    "keywords": [
+        "wordpress",
+        "plugin-framework",
+        "laravel",
+        "livewire",
+        "blade",
+        "eloquent",
+        "cli"
+    ],
+    "homepage": "https://github.com/andexer/wp-laracode",
+    "type": "project",
+    "license": "MIT",
+    "support": {
+        "issues": "https://github.com/andexer/wp-laracode/issues",
+        "source": "https://github.com/andexer/wp-laracode",
+        "docs": "https://github.com/andexer/wp-laracode/wiki"
+    },
+    "authors": [
+        {
+            "name": "Andexer Arvelo",
+            "email": "arvelofalcon@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "laravel-zero/framework": "^12.0.2"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.25.1",
+        "mockery/mockery": "^1.6.12",
+        "pestphp/pest": "^3.8.4|^4.1.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/",
+            "Database\\Factories\\": "database/factories/",
+            "Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "optimize-autoloader": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "bin": [
+        "application"
+    ]
+}

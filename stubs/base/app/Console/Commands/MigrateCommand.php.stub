@@ -1,0 +1,47 @@
+<?php
+
+namespace {{namespace}}\Console\Commands;
+
+use {{namespace}}\Database\Migrator;
+use Illuminate\Console\Command;
+
+class MigrateCommand extends Command
+{
+    protected $signature = 'migrate
+        {--force : Force the operation in production}
+        {--seed : Run seeders after migration}';
+
+    protected $description = 'Run the database migrations';
+
+    public function handle(): int
+    {
+        $this->components->info('Running migrations...');
+
+        try {
+            $migrator = new Migrator();
+            $pending = $migrator->getPendingMigrations();
+
+            if (empty($pending)) {
+                $this->components->info('Nothing to migrate.');
+                return Command::SUCCESS;
+            }
+
+            foreach ($pending as $migration) {
+                $this->components->task($migration);
+            }
+
+            $migrator->run();
+
+            $this->components->info('Migrations completed successfully.');
+
+            if ($this->option('seed')) {
+                $this->call('db:seed');
+            }
+
+            return Command::SUCCESS;
+        } catch (\Exception $e) {
+            $this->components->error('Migration failed: ' . $e->getMessage());
+            return Command::FAILURE;
+        }
+    }
+}

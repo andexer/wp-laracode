@@ -1,0 +1,127 @@
+<?php
+
+namespace {{namespace}}\Providers;
+
+use Illuminate\Support\ServiceProvider;
+
+/**
+ * Main Plugin Service Provider
+ *
+ * Loads configuration files and registers core services.
+ */
+class PluginServiceProvider extends ServiceProvider
+{
+    /**
+     * The configuration files to load.
+     *
+     * @var array
+     */
+    protected array $configFiles = [
+        'app',
+        'cache',
+        'database',
+        'logging',
+        'views',
+    ];
+
+    /**
+     * Register any application services.
+     *
+     * @return void
+     */
+    public function register(): void
+    {
+        $this->loadConfigurationFiles();
+        $this->registerCoreBindings();
+    }
+
+
+
+    /**
+     * Load all configuration files from config/ directory.
+     *
+     * @return void
+     */
+    protected function loadConfigurationFiles(): void
+    {
+        $configPath = {{constantPrefix}}_PATH . 'config';
+
+        foreach ($this->configFiles as $file) {
+            $filePath = $configPath . DIRECTORY_SEPARATOR . $file . '.php';
+
+            if (file_exists($filePath)) {
+                $this->app->make('config')->set($file, require $filePath);
+            }
+        }
+
+        // Also load any additional config files found in the directory
+        $configFiles = glob($configPath . '/*.php');
+        foreach ($configFiles as $configFile) {
+            $key = basename($configFile, '.php');
+            if (!in_array($key, $this->configFiles)) {
+                $this->app->make('config')->set($key, require $configFile);
+            }
+        }
+    }
+
+    /**
+     * Register core container bindings.
+     *
+     * @return void
+     */
+    protected function registerCoreBindings(): void
+    {
+        // Bind path constants
+        $this->app->instance('path.base', {{constantPrefix}}_PATH);
+        $this->app->instance('path.config', {{constantPrefix}}_PATH . 'config');
+        $this->app->instance('path.storage', {{constantPrefix}}_PATH . 'storage');
+        $this->app->instance('path.resources', {{constantPrefix}}_PATH . 'resources');
+        $this->app->instance('path.public', {{constantPrefix}}_PATH . 'public');
+
+        // Bind URL constants
+        $this->app->instance('url.base', {{constantPrefix}}_URL);
+        $this->app->instance('url.assets', {{constantPrefix}}_URL . 'public/');
+
+        // Register Translation Service Provider
+        $this->app->register(\Illuminate\Translation\TranslationServiceProvider::class);
+    }
+
+    /**
+     * Boot the application services.
+     */
+    public function boot(): void
+    {
+        $this->loadHelpersFromDirectory();
+
+        // Load translations
+        $this->app->make('translator')->addNamespace(
+            '{{slug}}',
+            {{constantPrefix}}_PATH . 'resources/lang'
+        );
+    }
+
+    /**
+     * Load additional helper files from the Helpers directory.
+     *
+     * @return void
+     */
+    protected function loadHelpersFromDirectory(): void
+    {
+        $helpersPath = {{constantPrefix}}_PATH . 'app/Helpers';
+
+        if (!is_dir($helpersPath)) {
+            return;
+        }
+
+        $helperFiles = glob($helpersPath . '/*.php');
+
+        foreach ($helperFiles as $file) {
+            // Skip class files (those with namespace declarations)
+            $content = file_get_contents($file);
+            if (strpos($content, 'namespace ') === false || strpos($content, 'class ') !== false) {
+                continue;
+            }
+            require_once $file;
+        }
+    }
+}

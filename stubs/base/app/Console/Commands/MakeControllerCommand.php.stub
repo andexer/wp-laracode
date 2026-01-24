@@ -1,0 +1,139 @@
+<?php
+
+namespace {{namespace}}\Console\Commands;
+
+use Illuminate\Console\Command;
+use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Str;
+
+class MakeControllerCommand extends Command
+{
+    protected $signature = 'make:controller
+        {name : The name of the controller}
+        {--invokable : Generate a single method, invokable controller}';
+
+    protected $description = 'Create a new controller class';
+
+    protected Filesystem $filesystem;
+
+    public function __construct(Filesystem $filesystem)
+    {
+        parent::__construct();
+        $this->filesystem = $filesystem;
+    }
+
+    public function handle(): int
+    {
+        $name = $this->argument('name');
+        $className = Str::studly($name);
+
+        $path = {{constantPrefix}}_PATH . "app/Http/Controllers/{$className}.php";
+        $this->ensureDirectoryExists(dirname($path));
+
+        if ($this->filesystem->exists($path)) {
+            $this->components->error("Controller [{$className}] already exists!");
+            return Command::FAILURE;
+        }
+
+        $stub = $this->option('invokable') ? $this->getInvokableStub($className) : $this->getStub($className);
+        $this->filesystem->put($path, $stub);
+
+        $this->components->info("Controller [{$className}] created successfully.");
+        return Command::SUCCESS;
+    }
+
+    protected function ensureDirectoryExists(string $path): void
+    {
+        if (!$this->filesystem->isDirectory($path)) {
+            $this->filesystem->makeDirectory($path, 0755, true);
+        }
+    }
+
+    protected function getStub(string $className): string
+    {
+        return <<<PHP
+<?php
+
+namespace {{namespace}}\Http\Controllers;
+
+class {$className}
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
+    {
+        //
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        //
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store()
+    {
+        //
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(\$id)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(\$id)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(\$id)
+    {
+        //
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(\$id)
+    {
+        //
+    }
+}
+PHP;
+    }
+
+    protected function getInvokableStub(string $className): string
+    {
+        return <<<PHP
+<?php
+
+namespace {{namespace}}\Http\Controllers;
+
+class {$className}
+{
+    /**
+     * Handle the incoming request.
+     */
+    public function __invoke()
+    {
+        //
+    }
+}
+PHP;
+    }
+}

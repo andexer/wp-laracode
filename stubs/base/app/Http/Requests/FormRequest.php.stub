@@ -1,0 +1,186 @@
+<?php
+
+namespace {{namespace}}\Http\Requests;
+
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
+
+/**
+ * Base Form Request class
+ *
+ * Extend this class for form validation in your plugin.
+ */
+abstract class FormRequest
+{
+    /**
+     * The validated data.
+     */
+    protected array $validated = [];
+
+    /**
+     * The validation errors.
+     */
+    protected array $errors = [];
+
+    /**
+     * The input data.
+     */
+    protected array $input = [];
+
+    /**
+     * Create a new form request instance.
+     */
+    public function __construct(array $input = [])
+    {
+        $this->input = $input ?: $this->getInputFromRequest();
+    }
+
+    /**
+     * Get the validation rules.
+     *
+     * @return array<string, mixed>
+     */
+    abstract public function rules(): array;
+
+    /**
+     * Get custom validation messages.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [];
+    }
+
+    /**
+     * Get custom attribute names.
+     *
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [];
+    }
+
+    /**
+     * Validate the request.
+     *
+     * @throws ValidationException
+     */
+    public function validate(): array
+    {
+        $validator = Validator::make(
+            $this->input,
+            $this->rules(),
+            $this->messages(),
+            $this->attributes()
+        );
+
+        if ($validator->fails()) {
+            $this->errors = $validator->errors()->toArray();
+            throw new ValidationException($validator);
+        }
+
+        $this->validated = $validator->validated();
+        return $this->validated;
+    }
+
+    /**
+     * Validate without throwing exception.
+     */
+    public function validateSilent(): bool
+    {
+        try {
+            $this->validate();
+            return true;
+        } catch (ValidationException $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Get the validated data.
+     */
+    public function validated(): array
+    {
+        return $this->validated;
+    }
+
+    /**
+     * Get a specific validated field.
+     */
+    public function get(string $key, mixed $default = null): mixed
+    {
+        return $this->validated[$key] ?? $this->input[$key] ?? $default;
+    }
+
+    /**
+     * Get all validation errors.
+     */
+    public function errors(): array
+    {
+        return $this->errors;
+    }
+
+    /**
+     * Check if validation passed.
+     */
+    public function passes(): bool
+    {
+        return empty($this->errors);
+    }
+
+    /**
+     * Check if validation failed.
+     */
+    public function fails(): bool
+    {
+        return !$this->passes();
+    }
+
+    /**
+     * Get input data from the WordPress request.
+     */
+    protected function getInputFromRequest(): array
+    {
+        $input = [];
+
+        // Get POST data
+        if (!empty($_POST)) {
+            $input = array_merge($input, wp_unslash($_POST));
+        }
+
+        // Get JSON body
+        $jsonInput = file_get_contents('php://input');
+        if ($jsonInput) {
+            $decoded = json_decode($jsonInput, true);
+            if (is_array($decoded)) {
+                $input = array_merge($input, $decoded);
+            }
+        }
+
+        // Get GET parameters
+        if (!empty($_GET)) {
+            $input = array_merge($input, wp_unslash($_GET));
+        }
+
+        return $input;
+    }
+
+    /**
+     * Create a new instance with input data.
+     */
+    public static function from(array $input): static
+    {
+        return new static($input);
+    }
+
+    /**
+     * Create and validate in one step.
+     */
+    public static function validateFrom(array $input): array
+    {
+        $request = new static($input);
+        return $request->validate();
+    }
+}

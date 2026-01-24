@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+/* Custom CSS for {{pluginName}} */
+.{{slug}}-app {
+    /* Plugin container styles */
+}

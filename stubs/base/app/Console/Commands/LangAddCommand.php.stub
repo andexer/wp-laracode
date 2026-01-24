@@ -1,0 +1,59 @@
+<?php
+
+namespace {{namespace}}\Console\Commands;
+
+use Illuminate\Console\Command;
+use Illuminate\Filesystem\Filesystem;
+use LaravelLang\Publisher\Console\Add as BaseAddCommand;
+
+class LangAddCommand extends Command
+{
+    protected $signature = 'lang:add
+        {locales* : The locales to add (e.g. es fr de)}
+        {--force : Replace existing files}';
+
+    protected $description = 'Add new languages to the application';
+
+    public function handle()
+    {
+        // Wrapper logic to use Laravel Lang Publisher
+        // Since we are in a custom environment, we ensure the publisher knows our paths
+        // via the Application container bindings we set up.
+
+        $locales = $this->argument('locales');
+
+        $this->components->info('Adding languages: ' . implode(', ', $locales));
+
+        // We can publish the files manually if the package command fails in this context
+        // But let's try to leverage the package's logic first or fallback to copy
+
+        $vendorPath = base_path('vendor/laravel-lang/locales');
+        $targetPath = resource_path('lang');
+        $fs = new Filesystem;
+
+        foreach ($locales as $locale) {
+            $source = "{$vendorPath}/{$locale}";
+
+            if (!$fs->exists($source)) {
+                // Try alternate structure (common/locales)
+                $source = base_path("vendor/laravel-lang/common/locales/{$locale}");
+            }
+
+            if (!$fs->exists($source)) {
+                 $this->components->error("Locale [{$locale}] not found in vendor.");
+                 continue;
+            }
+
+            $dest = "{$targetPath}/{$locale}";
+
+            if (!$fs->isDirectory($dest)) {
+                $fs->makeDirectory($dest, 0755, true);
+            }
+
+            $fs->copyDirectory($source, $dest);
+            $this->components->info("Language [{$locale}] installed successfully.");
+        }
+
+        return Command::SUCCESS;
+    }
+}

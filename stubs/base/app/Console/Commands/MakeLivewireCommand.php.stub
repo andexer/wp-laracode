@@ -1,0 +1,115 @@
+<?php
+
+namespace {{namespace}}\Console\Commands;
+
+use Illuminate\Console\Command;
+use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Str;
+
+class MakeLivewireCommand extends Command
+{
+    /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
+    protected $signature = 'make:livewire {name : The name of the Livewire component}';
+
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
+    protected $description = 'Create a new Livewire component';
+
+    /**
+     * @var Filesystem
+     */
+    protected $filesystem;
+
+    public function __construct(Filesystem $filesystem)
+    {
+        parent::__construct();
+        $this->filesystem = $filesystem;
+    }
+
+    /**
+     * Execute the console command.
+     */
+    public function handle(): int
+    {
+        $name = $this->argument('name');
+        $className = Str::studly($name);
+        $viewName = Str::kebab($name);
+
+        // Create the component class
+        $componentPath = $this->getComponentPath($className);
+        $this->ensureDirectoryExists(dirname($componentPath));
+
+        if ($this->filesystem->exists($componentPath)) {
+            $this->error("Livewire component [{$className}] already exists!");
+            return Command::FAILURE;
+        }
+
+        $this->filesystem->put($componentPath, $this->getComponentStub($className));
+        $this->info("Livewire component [{$className}] created successfully.");
+
+        // Create the view
+        $viewPath = $this->getViewPath($viewName);
+        $this->ensureDirectoryExists(dirname($viewPath));
+
+        if (!$this->filesystem->exists($viewPath)) {
+            $this->filesystem->put($viewPath, $this->getViewStub($className));
+            $this->info("Livewire view [livewire.{$viewName}] created successfully.");
+        }
+
+        return Command::SUCCESS;
+    }
+
+    protected function getComponentPath(string $className): string
+    {
+        return {{constantPrefix}}_PATH . 'app/Http/Livewire/' . $className . '.php';
+    }
+
+    protected function getViewPath(string $viewName): string
+    {
+        return {{constantPrefix}}_PATH . 'resources/views/livewire/' . $viewName . '.blade.php';
+    }
+
+    protected function ensureDirectoryExists(string $path): void
+    {
+        if (!$this->filesystem->isDirectory($path)) {
+            $this->filesystem->makeDirectory($path, 0755, true);
+        }
+    }
+
+    protected function getComponentStub(string $className): string
+    {
+        return <<<PHP
+<?php
+
+namespace {{namespace}}\Http\Livewire;
+
+use Livewire\Component;
+
+class {$className} extends Component
+{
+    public function render()
+    {
+        return view('livewire.' . \Illuminate\Support\Str::kebab('{$className}'));
+    }
+}
+PHP;
+    }
+
+    protected function getViewStub(string $className): string
+    {
+        return <<<BLADE
+<div>
+    {{-- {$className} Livewire Component --}}
+    <h2>{$className}</h2>
+    <p>Your Livewire component is ready!</p>
+</div>
+BLADE;
+    }
+}

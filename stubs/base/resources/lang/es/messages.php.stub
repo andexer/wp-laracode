@@ -1,0 +1,15 @@
+<?php
+
+return [
+    'success' => 'Operación exitosa.',
+    'error' => 'Ocurrió un error.',
+    'save' => 'Guardar',
+    'cancel' => 'Cancelar',
+    'delete' => 'Eliminar',
+    'edit' => 'Editar',
+    'update' => 'Actualizar',
+    'create' => 'Crear',
+    'search' => 'Buscar',
+    'not_found' => 'No encontrado.',
+    'unauthorized' => 'Acción no autorizada.',
+];

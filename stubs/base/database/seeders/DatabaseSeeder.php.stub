@@ -1,0 +1,45 @@
+<?php
+
+namespace {{namespace}}\Database\Seeders;
+
+/**
+ * Database Seeder
+ *
+ * The main seeder that runs all other seeders.
+ */
+class DatabaseSeeder
+{
+    /**
+     * The seeders to run.
+     *
+     * @var array<class-string>
+     */
+    protected array $seeders = [
+        // Add your seeders here:
+        // ExampleSeeder::class,
+    ];
+
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        foreach ($this->seeders as $seederClass) {
+            if (class_exists($seederClass)) {
+                $seeder = new $seederClass();
+                $seeder->run();
+            }
+        }
+    }
+
+    /**
+     * Call a specific seeder.
+     */
+    public function call(string $seederClass): void
+    {
+        if (class_exists($seederClass)) {
+            $seeder = new $seederClass();
+            $seeder->run();
+        }
+    }
+}

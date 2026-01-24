@@ -1,0 +1,51 @@
+<?php
+
+namespace {{namespace}}\Http\Middleware;
+
+use {{namespace}}\Helpers\Nonce;
+
+/**
+ * Middleware to verify WordPress nonce on requests.
+ */
+class VerifyNonceMiddleware
+{
+    /**
+     * Handle an incoming request.
+     *
+     * @param \WP_REST_Request $request
+     * @param \Closure $next
+     * @param string $action The nonce action to verify (optional)
+     * @return mixed
+     */
+    public function handle(\WP_REST_Request $request, \Closure $next, string $action = 'livewire')
+    {
+        // Skip nonce verification for logged-out users if doing AJAX
+        // or if this is specifically a public endpoint
+        if ($this->shouldSkipVerification($request)) {
+            return $next($request);
+        }
+
+        if (!Nonce::verifyRestRequest($request, $action)) {
+            return new \WP_Error(
+                'rest_nonce_invalid',
+                __('Invalid or expired security token. Please refresh the page and try again.', '{{slug}}'),
+                ['status' => 403]
+            );
+        }
+
+        return $next($request);
+    }
+
+    /**
+     * Determine if nonce verification should be skipped.
+     *
+     * @param \WP_REST_Request $request
+     * @return bool
+     */
+    protected function shouldSkipVerification(\WP_REST_Request $request): bool
+    {
+        // Add custom logic here if needed
+        // For example, skip for certain public endpoints
+        return false;
+    }
+}

@@ -1,0 +1,209 @@
+<?php
+
+namespace {{namespace}}\Providers;
+
+use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Facades\Facade;
+use Illuminate\Support\ServiceProvider;
+use Illuminate\View\Compilers\BladeCompiler;
+use Illuminate\View\Engines\CompilerEngine;
+use Illuminate\View\Engines\EngineResolver;
+use Illuminate\View\Factory;
+use Illuminate\View\FileViewFinder;
+use Illuminate\Support\Str;
+use Livewire\Component;
+use Livewire\Livewire;
+use Livewire\LivewireManager;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use {{namespace}}\Helpers\Nonce;
+
+class LivewireServiceProvider extends ServiceProvider
+{
+    /**
+     * Plugin-specific nonce action for Livewire requests.
+     */
+    protected const NONCE_ACTION = 'livewire';
+
+    public function register()
+    {
+        Facade::setFacadeApplication($this->app);
+
+        $this->registerViewFactory();
+        $this->registerSession();
+        $this->registerLivewire();
+    }
+
+    public function boot()
+    {
+        $this->registerBladeDirectives();
+        $this->registerRestApiEndpoint();
+        $this->enqueueAssets();
+    }
+
+    protected function registerViewFactory()
+    {
+        $this->app->singleton('view', function ($app) {
+            $resolver = new EngineResolver;
+            $viewsPath = $this->app->resourcePath('views');
+
+            // Ensure views directory exists
+            if (!is_dir($viewsPath)) {
+                mkdir($viewsPath, 0755, true);
+            }
+
+            $finder = new FileViewFinder(new Filesystem, [$viewsPath]);
+            $factory = new Factory($resolver, $finder, $this->app);
+            $factory->setContainer($this->app);
+
+            $compiledPath = $this->app->storagePath() . '/framework/views';
+            if (!is_dir($compiledPath)) {
+                mkdir($compiledPath, 0755, true);
+            }
+
+            $compiler = new BladeCompiler(new Filesystem, $compiledPath);
+            $resolver->register('blade', fn() => new CompilerEngine($compiler));
+
+            return $factory;
+        });
+    }
+
+    protected function registerSession()
+    {
+        $this->app->singleton('session', function () {
+            $sessionName = '{{slug}}_session_' . get_current_blog_id();
+            return new \Illuminate\Session\Store(
+                $sessionName,
+                new \Illuminate\Session\CookieSessionHandler(new Filesystem, 120)
+            );
+        });
+    }
+
+    protected function registerLivewire()
+    {
+        $this->app->singleton('livewire', fn() => new LivewireManager);
+
+
+    }
+
+    protected function registerBladeDirectives()
+    {
+        $this->app->make('view')->getEngineResolver()->resolve('blade')->getCompiler()->directive('livewire', function ($expression) {
+            return "<?php echo \\Livewire\\Livewire::mount({$expression}); ?>";
+        });
+    }
+
+    protected function registerRestApiEndpoint()
+    {
+        add_action('rest_api_init', function () {
+            // Plugin-specific endpoint to avoid collisions with other wp-laracode plugins
+            register_rest_route('{{slug}}/v1', '/livewire/message/(?P<name>[\w-]+)', [
+                'methods' => 'POST',
+                'callback' => [$this, 'handleLivewireRequest'],
+                'permission_callback' => [$this, 'verifyNonce'],
+            ]);
+        });
+    }
+
+    /**
+     * Verify nonce for security.
+     *
+     * @param \WP_REST_Request $request
+     * @return bool
+     */
+    public function verifyNonce(\WP_REST_Request $request): bool
+    {
+        return Nonce::verifyRestRequest($request, self::NONCE_ACTION);
+    }
+
+    public function handleLivewireRequest(\WP_REST_Request $wpRequest)
+    {
+        // Bridge WP_REST_Request to a Symfony Request
+        $symfonyRequest = Request::createFromGlobals();
+
+        try {
+            // Let Livewire handle the request and get a Symfony Response
+            $livewireResponse = $this->app->make('livewire')->getHttpConnectionHandler()->handle($symfonyRequest);
+
+            // Bridge the Symfony Response back to WordPress
+            $this->sendResponse($livewireResponse);
+        } catch (\Exception $e) {
+            // Log the error
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('[{{slug}}] Livewire error: ' . $e->getMessage());
+            }
+
+            wp_send_json_error([
+                'message' => __('An error occurred processing the request.', '{{slug}}'),
+            ], 500);
+        }
+    }
+
+    protected function sendResponse(Response $response)
+    {
+        http_response_code($response->getStatusCode());
+        foreach ($response->headers->allPreserveCase() as $name => $values) {
+            foreach ($values as $value) {
+                header($name . ': ' . $value, false);
+            }
+        }
+        echo $response->getContent();
+        exit;
+    }
+
+    protected function enqueueAssets()
+    {
+        add_action('wp_enqueue_scripts', [$this, 'enqueueScripts']);
+        add_action('admin_enqueue_scripts', [$this, 'enqueueScripts']);
+    }
+
+    public function enqueueScripts()
+    {
+        // Enqueue Livewire's JavaScript
+        wp_enqueue_script(
+            '{{slug}}-livewire',
+            {{constantPrefix}}_URL . 'vendor/livewire/livewire/dist/livewire.js',
+            [],
+            {{constantPrefix}}_VERSION,
+            true
+        );
+
+        // Plugin-specific JavaScript object to avoid global collisions
+        $livewireConfig = [
+            'update_uri' => rest_url('{{slug}}/v1/livewire/message/'),
+            '_wpnonce' => Nonce::create(self::NONCE_ACTION),
+            'csrf_token' => Nonce::create(self::NONCE_ACTION),
+        ];
+
+        // Assign to plugin-specific global object
+        wp_add_inline_script(
+            '{{slug}}-livewire',
+            'window.Livewire_{{constantPrefix}} = ' . json_encode($livewireConfig) . ';' .
+            'window.Livewire = window.Livewire || {};' .
+            'window.Livewire.updateUri = window.Livewire_{{constantPrefix}}.update_uri;',
+            'before'
+        );
+
+        // Inject nonce into Livewire requests
+        wp_add_inline_script(
+            '{{slug}}-livewire',
+            <<<JS
+(function() {
+    var config = window.Livewire_{{constantPrefix}};
+
+    // Override fetch to add nonce headers for Livewire requests
+    var originalFetch = window.fetch;
+    window.fetch = function(url, options) {
+        if (typeof url === 'string' && url.includes('/{{slug}}/v1/livewire/')) {
+            options = options || {};
+            options.headers = options.headers || {};
+            options.headers['X-WP-Nonce'] = config._wpnonce;
+        }
+        return originalFetch.call(this, url, options);
+    };
+})();
+JS,
+            'after'
+        );
+    }
+}

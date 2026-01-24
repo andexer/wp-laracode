@@ -1,0 +1,50 @@
+<?php
+
+return [
+    /*
+    |--------------------------------------------------------------------------
+    | Default Log Channel
+    |--------------------------------------------------------------------------
+    |
+    | This option defines the default log channel that gets used when writing
+    | messages to the logs. The value should be one of the channels defined
+    | in the "channels" configuration array.
+    |
+    */
+
+    'default' => 'single',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Log Channels
+    |--------------------------------------------------------------------------
+    |
+    | Here you may configure the log channels for your application.
+    | Each plugin has its own log file for complete isolation.
+    |
+    */
+
+    'channels' => [
+        'single' => [
+            'driver' => 'single',
+            'path' => {{constantPrefix}}_PATH . 'storage/logs/plugin.log',
+            'level' => defined('WP_DEBUG') && WP_DEBUG ? 'debug' : 'error',
+        ],
+
+        'daily' => [
+            'driver' => 'daily',
+            'path' => {{constantPrefix}}_PATH . 'storage/logs/plugin.log',
+            'level' => defined('WP_DEBUG') && WP_DEBUG ? 'debug' : 'error',
+            'days' => 14,
+        ],
+
+        'stderr' => [
+            'driver' => 'monolog',
+            'handler' => \Monolog\Handler\StreamHandler::class,
+            'formatter' => \Monolog\Formatter\LineFormatter::class,
+            'with' => [
+                'stream' => 'php://stderr',
+            ],
+        ],
+    ],
+];

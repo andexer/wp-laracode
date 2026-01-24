@@ -1,0 +1,34 @@
+<?php
+
+namespace {{namespace}}\Console\Commands;
+
+use {{namespace}}\Database\Migrator;
+use Illuminate\Console\Command;
+
+class MigrateRollbackCommand extends Command
+{
+    protected $signature = 'migrate:rollback
+        {--step=1 : Number of migrations to rollback}';
+
+    protected $description = 'Rollback the last database migration';
+
+    public function handle(): int
+    {
+        $this->components->info('Rolling back migrations...');
+
+        try {
+            $migrator = new Migrator();
+            $steps = (int) $this->option('step');
+
+            for ($i = 0; $i < $steps; $i++) {
+                $migrator->rollback();
+            }
+
+            $this->components->info('Rollback completed successfully.');
+            return Command::SUCCESS;
+        } catch (\Exception $e) {
+            $this->components->error('Rollback failed: ' . $e->getMessage());
+            return Command::FAILURE;
+        }
+    }
+}

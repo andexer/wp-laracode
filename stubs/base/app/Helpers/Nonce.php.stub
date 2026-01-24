@@ -1,0 +1,106 @@
+<?php
+
+namespace {{namespace}}\Helpers;
+
+/**
+ * WordPress Nonce Helper for security.
+ *
+ * Provides a clean interface for creating and verifying WordPress nonces.
+ */
+class Nonce
+{
+    /**
+     * Create a nonce for a given action.
+     *
+     * @param string $action The action to create a nonce for
+     * @return string The nonce token
+     */
+    public static function create(string $action = ''): string
+    {
+        $action = self::prefixAction($action);
+        return wp_create_nonce($action);
+    }
+
+    /**
+     * Verify a nonce for a given action.
+     *
+     * @param string $nonce The nonce to verify
+     * @param string $action The action to verify against
+     * @return bool|int False if invalid, 1 if valid and less than 12 hours old, 2 if valid and between 12-24 hours old
+     */
+    public static function verify(string $nonce, string $action = ''): bool|int
+    {
+        $action = self::prefixAction($action);
+        return wp_verify_nonce($nonce, $action);
+    }
+
+    /**
+     * Get the nonce field HTML for forms.
+     *
+     * @param string $action The action for the nonce
+     * @param string $name The name of the nonce field
+     * @param bool $referer Whether to include referer field
+     * @param bool $echo Whether to echo or return
+     * @return string The nonce field HTML
+     */
+    public static function field(string $action = '', string $name = '_wpnonce', bool $referer = true, bool $echo = false): string
+    {
+        $action = self::prefixAction($action);
+        return wp_nonce_field($action, $name, $referer, $echo);
+    }
+
+    /**
+     * Get the nonce URL for AJAX/API requests.
+     *
+     * @param string $action The action for the nonce
+     * @return array Array with nonce_action and nonce value
+     */
+    public static function ajaxData(string $action = ''): array
+    {
+        return [
+            'nonce_action' => self::prefixAction($action),
+            'nonce' => self::create($action),
+        ];
+    }
+
+    /**
+     * Verify the nonce from a REST API request.
+     *
+     * @param \WP_REST_Request $request The REST request object
+     * @param string $action The action to verify against
+     * @param string $nonceKey The key name in the request (default: _wpnonce)
+     * @return bool Whether the nonce is valid
+     */
+    public static function verifyRestRequest(\WP_REST_Request $request, string $action = '', string $nonceKey = '_wpnonce'): bool
+    {
+        $nonce = $request->get_header('X-WP-Nonce') ?? $request->get_param($nonceKey);
+
+        if (empty($nonce)) {
+            return false;
+        }
+
+        return (bool) self::verify($nonce, $action);
+    }
+
+    /**
+     * Prefix the action with the plugin slug for isolation.
+     *
+     * @param string $action The action to prefix
+     * @return string The prefixed action
+     */
+    protected static function prefixAction(string $action): string
+    {
+        $prefix = '{{slug}}_';
+
+        if (empty($action)) {
+            return $prefix . 'default';
+        }
+
+        // Don't double-prefix
+        if (str_starts_with($action, $prefix)) {
+            return $action;
+        }
+
+        return $prefix . $action;
+    }
+}

@@ -1,0 +1,84 @@
+<?php
+
+namespace {{namespace}}\Console\Commands;
+
+use Illuminate\Console\Command;
+use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Str;
+
+class MakeRequestCommand extends Command
+{
+    protected $signature = 'make:request {name : The name of the form request}';
+
+    protected $description = 'Create a new form request class';
+
+    protected Filesystem $filesystem;
+
+    public function __construct(Filesystem $filesystem)
+    {
+        parent::__construct();
+        $this->filesystem = $filesystem;
+    }
+
+    public function handle(): int
+    {
+        $name = $this->argument('name');
+        $className = Str::studly($name);
+
+        $path = {{constantPrefix}}_PATH . "app/Http/Requests/{$className}.php";
+        $this->ensureDirectoryExists(dirname($path));
+
+        if ($this->filesystem->exists($path)) {
+            $this->components->error("Request [{$className}] already exists!");
+            return Command::FAILURE;
+        }
+
+        $this->filesystem->put($path, $this->getStub($className));
+        $this->components->info("Request [{$className}] created successfully.");
+
+        return Command::SUCCESS;
+    }
+
+    protected function ensureDirectoryExists(string $path): void
+    {
+        if (!$this->filesystem->isDirectory($path)) {
+            $this->filesystem->makeDirectory($path, 0755, true);
+        }
+    }
+
+    protected function getStub(string $className): string
+    {
+        return <<<PHP
+<?php
+
+namespace {{namespace}}\Http\Requests;
+
+class {$className} extends FormRequest
+{
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, mixed>
+     */
+    public function rules(): array
+    {
+        return [
+            //
+        ];
+    }
+
+    /**
+     * Get custom validation messages.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            //
+        ];
+    }
+}
+PHP;
+    }
+}

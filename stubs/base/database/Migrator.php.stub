@@ -1,0 +1,220 @@
+<?php
+
+namespace {{namespace}}\Database;
+
+use Illuminate\Database\Capsule\Manager as Capsule;
+use Illuminate\Filesystem\Filesystem;
+
+/**
+ * Database Migrator
+ *
+ * Handles running and tracking migrations for the plugin.
+ */
+class Migrator
+{
+    protected Filesystem $filesystem;
+    protected Capsule $db;
+    protected string $migrationsPath;
+    protected string $migrationsTable = '{{slug}}_migrations';
+
+    public function __construct()
+    {
+        $this->filesystem = new Filesystem;
+        $this->db = {{slug}}_app('db');
+        $this->migrationsPath = {{constantPrefix}}_PATH . 'database/migrations';
+    }
+
+    /**
+     * Run pending migrations.
+     */
+    public function run(): void
+    {
+        $this->ensureMigrationTableExists();
+
+        $ran = $this->getRanMigrations();
+        $migrations = $this->getMigrationFiles();
+
+        $pending = array_diff($migrations, $ran);
+
+        foreach ($pending as $migration) {
+            $this->runMigration($migration);
+        }
+    }
+
+    /**
+     * Rollback the last batch of migrations.
+     */
+    public function rollback(): void
+    {
+        $this->ensureMigrationTableExists();
+
+        $lastBatch = $this->getLastBatchNumber();
+        $migrations = $this->getMigrationsForBatch($lastBatch);
+
+        foreach (array_reverse($migrations) as $migration) {
+            $this->rollbackMigration($migration);
+        }
+    }
+
+    /**
+     * Rollback all migrations.
+     */
+    public function reset(): void
+    {
+        $ran = array_reverse($this->getRanMigrations());
+
+        foreach ($ran as $migration) {
+            $this->rollbackMigration($migration);
+        }
+    }
+
+    /**
+     * Get list of ran migrations.
+     */
+    public function getRanMigrations(): array
+    {
+        if (!$this->migrationTableExists()) {
+            return [];
+        }
+
+        return $this->db->getConnection()
+            ->table($this->migrationsTable)
+            ->orderBy('batch')
+            ->orderBy('migration')
+            ->pluck('migration')
+            ->toArray();
+    }
+
+    /**
+     * Get pending migrations.
+     */
+    public function getPendingMigrations(): array
+    {
+        $ran = $this->getRanMigrations();
+        $all = $this->getMigrationFiles();
+
+        return array_diff($all, $ran);
+    }
+
+    /**
+     * Get all migration files.
+     */
+    protected function getMigrationFiles(): array
+    {
+        if (!$this->filesystem->isDirectory($this->migrationsPath)) {
+            return [];
+        }
+
+        $files = $this->filesystem->glob($this->migrationsPath . '/*.php');
+
+        return array_map(function ($file) {
+            return pathinfo($file, PATHINFO_FILENAME);
+        }, $files);
+    }
+
+    /**
+     * Run a single migration.
+     */
+    protected function runMigration(string $migration): void
+    {
+        $file = $this->migrationsPath . '/' . $migration . '.php';
+
+        if (!$this->filesystem->exists($file)) {
+            return;
+        }
+
+        $migrationClass = require $file;
+
+        if (method_exists($migrationClass, 'up')) {
+            $migrationClass->up();
+        }
+
+        $batch = $this->getNextBatchNumber();
+
+        $this->db->getConnection()->table($this->migrationsTable)->insert([
+            'migration' => $migration,
+            'batch' => $batch,
+        ]);
+    }
+
+    /**
+     * Rollback a single migration.
+     */
+    protected function rollbackMigration(string $migration): void
+    {
+        $file = $this->migrationsPath . '/' . $migration . '.php';
+
+        if (!$this->filesystem->exists($file)) {
+            return;
+        }
+
+        $migrationClass = require $file;
+
+        if (method_exists($migrationClass, 'down')) {
+            $migrationClass->down();
+        }
+
+        $this->db->getConnection()
+            ->table($this->migrationsTable)
+            ->where('migration', $migration)
+            ->delete();
+    }
+
+    /**
+     * Ensure the migrations table exists.
+     */
+    protected function ensureMigrationTableExists(): void
+    {
+        if ($this->migrationTableExists()) {
+            return;
+        }
+
+        $schema = $this->db->getConnection()->getSchemaBuilder();
+
+        $schema->create($this->migrationsTable, function ($table) {
+            $table->bigIncrements('id');
+            $table->string('migration');
+            $table->integer('batch');
+        });
+    }
+
+    /**
+     * Check if the migrations table exists.
+     */
+    protected function migrationTableExists(): bool
+    {
+        return $this->db->getConnection()
+            ->getSchemaBuilder()
+            ->hasTable($this->migrationsTable);
+    }
+
+    /**
+     * Get the next batch number.
+     */
+    protected function getNextBatchNumber(): int
+    {
+        return $this->getLastBatchNumber() + 1;
+    }
+
+    /**
+     * Get the last batch number.
+     */
+    protected function getLastBatchNumber(): int
+    {
+        return (int) $this->db->getConnection()
+            ->table($this->migrationsTable)
+            ->max('batch') ?? 0;
+    }
+
+    /**
+     * Get migrations for a specific batch.
+     */
+    protected function getMigrationsForBatch(int $batch): array
+    {
+        return $this->db->getConnection()
+            ->table($this->migrationsTable)
+            ->where('batch', $batch)
+            ->pluck('migration')
+            ->toArray();
+    }
+}

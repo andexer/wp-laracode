@@ -1,0 +1,15 @@
+/**
+ * {{pluginName}} JavaScript
+ *
+ * Main entry point for the plugin's frontend JavaScript.
+ */
+
+// Import Livewire if using it
+// import { Livewire } from 'livewire';
+
+console.log('{{pluginName}} loaded successfully.');
+
+// Plugin initialization
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize any plugin-specific JavaScript here
+});

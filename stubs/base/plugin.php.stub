@@ -1,0 +1,148 @@
+<?php
+/**
+ * Plugin Name:       {{pluginName}}
+ * Plugin URI:        https://github.com/{{vendor}}/{{slug}}
+ * Description:       {{description}}
+ * Version:           1.0.0
+ * Author:            {{authorName}}
+ * Author URI:        {{authorUrl}}
+ * License:           {{license}}
+ * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
+ * Text Domain:       {{slug}}
+ * Domain Path:       /languages
+ * Requires PHP:      8.2
+ * Requires at least: 6.0
+ */
+
+if (!defined('WPINC')) {
+    die;
+}
+
+// Plugin Constants
+define('{{constantPrefix}}_VERSION', '1.0.0');
+define('{{constantPrefix}}_PATH', plugin_dir_path(__FILE__));
+define('{{constantPrefix}}_URL', plugin_dir_url(__FILE__));
+define('{{constantPrefix}}_BASENAME', plugin_basename(__FILE__));
+
+/**
+ * Check for autoloader
+ */
+if (!file_exists($autoloader = __DIR__ . '/vendor/autoload.php')) {
+    add_action('admin_notices', function () {
+        $class = 'notice notice-error';
+        $message = sprintf(
+            __('<strong>{{pluginName}}:</strong> Composer dependencies not installed. Please run %s in the plugin directory.', '{{slug}}'),
+            '<code>composer install</code>'
+        );
+        printf('<div class="%1$s"><p>%2$s</p></div>', esc_attr($class), $message);
+    });
+    return;
+}
+
+require_once $autoloader;
+
+/**
+ * Bootstrap the application
+ */
+$app = require_once __DIR__ . '/bootstrap/app.php';
+
+/**
+ * Boot the application
+ */
+add_action('plugins_loaded', function () use ($app) {
+    $app->boot();
+}, 5);
+
+/**
+ * Activation Hook - Run migrations and seeders
+ */
+register_activation_hook(__FILE__, function () use ($app) {
+    // Ensure storage directories exist
+    $storageDirs = [
+        {{constantPrefix}}_PATH . 'storage/logs',
+        {{constantPrefix}}_PATH . 'storage/framework/views',
+        {{constantPrefix}}_PATH . 'storage/framework/cache',
+        {{constantPrefix}}_PATH . 'storage/framework/sessions',
+    ];
+
+    foreach ($storageDirs as $dir) {
+        if (!is_dir($dir)) {
+            wp_mkdir_p($dir);
+        }
+    }
+
+    // Create .htaccess to protect storage
+    $htaccess = {{constantPrefix}}_PATH . 'storage/.htaccess';
+    if (!file_exists($htaccess)) {
+        file_put_contents($htaccess, "Deny from all\n");
+    }
+
+    // Run migrations if migration class exists
+    if (class_exists(\{{namespace}}\Database\Migrator::class)) {
+        $migrator = $app->make(\{{namespace}}\Database\Migrator::class);
+        $migrator->run();
+    }
+
+    // Run seeders if seeder class exists
+    if (class_exists(\{{namespace}}\Database\Seeders\DatabaseSeeder::class)) {
+        $seeder = $app->make(\{{namespace}}\Database\Seeders\DatabaseSeeder::class);
+        $seeder->run();
+    }
+
+    // Store plugin version for future updates
+    update_option('{{slug}}_version', {{constantPrefix}}_VERSION);
+
+    // Clear any cached data
+    if (function_exists('wp_cache_flush')) {
+        wp_cache_flush();
+    }
+
+    // Log activation
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+        error_log('[{{slug}}] Plugin activated successfully.');
+    }
+});
+
+/**
+ * Deactivation Hook - Clean up cache, sessions, and logs
+ */
+register_deactivation_hook(__FILE__, function () {
+    // Clear plugin cache
+    $cacheDir = {{constantPrefix}}_PATH . 'storage/framework/cache';
+    if (is_dir($cacheDir)) {
+        array_map('unlink', glob($cacheDir . '/*') ?: []);
+    }
+
+    // Clear compiled views
+    $viewsDir = {{constantPrefix}}_PATH . 'storage/framework/views';
+    if (is_dir($viewsDir)) {
+        array_map('unlink', glob($viewsDir . '/*') ?: []);
+    }
+
+    // Clear sessions
+    $sessionsDir = {{constantPrefix}}_PATH . 'storage/framework/sessions';
+    if (is_dir($sessionsDir)) {
+        array_map('unlink', glob($sessionsDir . '/*') ?: []);
+    }
+
+    // Clean up logs (keep last 7 days or truncate)
+    $logFile = {{constantPrefix}}_PATH . 'storage/logs/plugin.log';
+    if (file_exists($logFile) && filesize($logFile) > 1048576) { // > 1MB
+        file_put_contents($logFile, ''); // Truncate
+    }
+
+    // Clear WordPress object cache for this plugin
+    if (function_exists('wp_cache_delete')) {
+        wp_cache_delete('{{slug}}_options', '{{slug}}');
+    }
+
+    // Log deactivation
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+        error_log('[{{slug}}] Plugin deactivated, cache cleared.');
+    }
+});
+
+/**
+ * Uninstall Hook (registered separately)
+ * Create uninstall.php in plugin root for complete cleanup
+ */

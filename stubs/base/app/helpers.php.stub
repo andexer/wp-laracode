@@ -1,0 +1,192 @@
+<?php
+
+/**
+ * {{pluginName}} Helper Functions
+ *
+ * These functions are namespaced to avoid collisions with other plugins.
+ * Use function_exists() checks to ensure safe loading.
+ */
+
+if (! function_exists('{{functionPrefix}}_app')) {
+    /**
+     * Get the {{pluginName}} application container instance.
+     *
+     * @param string|null $abstract
+     * @param array $parameters
+     * @return mixed|\{{namespace}}\Application
+     */
+    function {{functionPrefix}}_app(?string $abstract = null, array $parameters = [])
+    {
+        $app = \{{namespace}}\Application::getInstance();
+
+        if (is_null($abstract)) {
+            return $app;
+        }
+
+        return $app->make($abstract, $parameters);
+    }
+}
+
+if (! function_exists('{{functionPrefix}}_config')) {
+    /**
+     * Get / set the specified configuration value.
+     *
+     * @param array|string|null $key
+     * @param mixed $default
+     * @return mixed|\Illuminate\Config\Repository
+     */
+    function {{functionPrefix}}_config($key = null, $default = null)
+    {
+        $config = {{functionPrefix}}_app('config');
+
+        if (is_null($key)) {
+            return $config;
+        }
+
+        if (is_array($key)) {
+            return $config->set($key);
+        }
+
+        return $config->get($key, $default);
+    }
+}
+
+if (! function_exists('{{functionPrefix}}_view')) {
+    /**
+     * Get the evaluated view contents for the given view.
+     *
+     * @param string|null $view
+     * @param array $data
+     * @param array $mergeData
+     * @return \Illuminate\View\View|\Illuminate\View\Factory
+     */
+    function {{functionPrefix}}_view(?string $view = null, array $data = [], array $mergeData = [])
+    {
+        $factory = {{functionPrefix}}_app('view');
+
+        if (is_null($view)) {
+            return $factory;
+        }
+
+        return $factory->make($view, $data, $mergeData);
+    }
+}
+
+if (! function_exists('{{functionPrefix}}_storage_path')) {
+    /**
+     * Get the path to the storage folder.
+     *
+     * @param string $path
+     * @return string
+     */
+    function {{functionPrefix}}_storage_path(string $path = ''): string
+    {
+        return {{constantPrefix}}_PATH . 'storage' . ($path ? DIRECTORY_SEPARATOR . $path : $path);
+    }
+}
+
+if (! function_exists('{{functionPrefix}}_resource_path')) {
+    /**
+     * Get the path to the resources folder.
+     *
+     * @param string $path
+     * @return string
+     */
+    function {{functionPrefix}}_resource_path(string $path = ''): string
+    {
+        return {{constantPrefix}}_PATH . 'resources' . ($path ? DIRECTORY_SEPARATOR . $path : $path);
+    }
+}
+
+if (! function_exists('{{functionPrefix}}_asset')) {
+    /**
+     * Get the URL to a plugin asset.
+     *
+     * @param string $path
+     * @return string
+     */
+    function {{functionPrefix}}_asset(string $path = ''): string
+    {
+        return {{constantPrefix}}_URL . 'public/' . ltrim($path, '/');
+    }
+}
+
+if (! function_exists('{{functionPrefix}}_url')) {
+    /**
+     * Get the plugin's REST API URL.
+     *
+     * @param string $path
+     * @return string
+     */
+    function {{functionPrefix}}_url(string $path = ''): string
+    {
+        return rest_url('{{slug}}/v1/' . ltrim($path, '/'));
+    }
+}
+
+if (! function_exists('{{functionPrefix}}_nonce')) {
+    /**
+     * Create a nonce for the plugin.
+     *
+     * @param string $action
+     * @return string
+     */
+    function {{functionPrefix}}_nonce(string $action = ''): string
+    {
+        return \{{namespace}}\Helpers\Nonce::create($action);
+    }
+}
+
+if (! function_exists('{{functionPrefix}}_verify_nonce')) {
+    /**
+     * Verify a nonce for the plugin.
+     *
+     * @param string $nonce
+     * @param string $action
+     * @return bool|int
+     */
+    function {{functionPrefix}}_verify_nonce(string $nonce, string $action = ''): bool|int
+    {
+        return \{{namespace}}\Helpers\Nonce::verify($nonce, $action);
+    }
+}
+
+if (! function_exists('{{functionPrefix}}_log')) {
+    /**
+     * Log a message to the plugin's log file.
+     *
+     * @param string $message
+     * @param array $context
+     * @param string $level
+     * @return void
+     */
+    function {{functionPrefix}}_log(string $message, array $context = [], string $level = 'info'): void
+    {
+        $logFile = {{functionPrefix}}_storage_path('logs/plugin.log');
+        $timestamp = date('Y-m-d H:i:s');
+        $formattedContext = !empty($context) ? ' ' . json_encode($context) : '';
+
+        $logMessage = "[{$timestamp}] {$level}: {$message}{$formattedContext}" . PHP_EOL;
+
+        file_put_contents($logFile, $logMessage, FILE_APPEND | LOCK_EX);
+    }
+}
+
+if (! function_exists('{{functionPrefix}}_trans')) {
+    /**
+     * Translate the given message.
+     *
+     * @param string|null $key
+     * @param array $replace
+     * @param string|null $locale
+     * @return \Illuminate\Contracts\Translation\Translator|string|array|null
+     */
+    function {{functionPrefix}}_trans(?string $key = null, array $replace = [], ?string $locale = null)
+    {
+        if (is_null($key)) {
+            return {{functionPrefix}}_app('translator');
+        }
+
+        return {{functionPrefix}}_app('translator')->get($key, $replace, $locale);
+    }
+}

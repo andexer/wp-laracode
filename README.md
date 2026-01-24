@@ -107,6 +107,10 @@ Once inside your plugin directory:
 ./my-plugin make:model Order --migration
 ./my-plugin make:controller ApiController
 
+# Localization
+./my-plugin lang:add es fr
+./my-plugin lang:update
+
 # Database operations
 ./my-plugin migrate
 ./my-plugin make:migration create_products_table
@@ -228,11 +232,13 @@ wp-laracode is open-source software licensed under the [MIT license](LICENSE).
 ### For Companies
 
 If your company:
+
 - Has more than 10 employees
 - Generates revenue using this software
 - Offers commercial products/services based on this code
 
 Please consider:
+
 1. [Obtaining a commercial license](https://example.com/license)
 2. [Becoming a sponsor](https://github.com/sponsors/andexer)
 3. [Contributing improvements](CONTRIBUTING.md)
@@ -246,11 +252,18 @@ This is not a legal requirement, but an ethical request to support ongoing open-
 - 💬 [Discussions](https://github.com/andexer/wp-laracode/discussions)
 - 🚀 [Changelog](CHANGELOG.md)
 
-## 🙏 Acknowledgments
+## 🤝 Colaboradores
 
-- Built on [Laravel Zero](https://laravel-zero.com)
-- Uses [Livewire](https://laravel-livewire.com)
-- Inspired by modern WordPress development practices
+¡Aceptamos colaboradores! Si quieres mejorar `wp-laracode`, por favor lee nuestra [Guía de Contribución](CONTRIBUTING.md).
+
+Este proyecto es mantenido por [Andexer Arvelo](https://github.com/andexer).
+
+## ☕ Donaciones
+
+Si este proyecto te ha sido útil, considera hacer una donación para mantener su desarrollo activo.
+
+- [PayPal](https://paypal.me/andexer)
+- [GitHub Sponsors](https://github.com/sponsors/andexer)
 
 ---
 
