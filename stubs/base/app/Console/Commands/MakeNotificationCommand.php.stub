@@ -29,12 +29,12 @@ class MakeNotificationCommand extends Command
         $className = array_pop($pathParts);
         $relativePath = implode('/', $pathParts);
 
-        $namespace = '{{namespace}}\Services\Notifications';
+        $namespace = '{{namespace}}\Notifications';
         if (!empty($pathParts)) {
             $namespace .= '\\' . implode('\\', $pathParts);
         }
 
-        $path = {{constantPrefix}}_PATH . 'app/Services/Notifications/' . ($relativePath ? $relativePath . '/' : '') . $className . '.php';
+        $path = {{constantPrefix}}_PATH . 'app/Notifications/' . ($relativePath ? $relativePath . '/' : '') . $className . '.php';
 
         $this->ensureDirectoryExists(dirname($path));
 

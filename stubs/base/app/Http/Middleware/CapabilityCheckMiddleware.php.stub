@@ -1,6 +1,6 @@
 <?php
 
-namespace {{namespace}}\Components\Middleware;
+namespace {{namespace}}\Http\Middleware;
 
 class CapabilityCheckMiddleware
 {

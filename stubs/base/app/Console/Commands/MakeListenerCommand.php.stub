@@ -40,7 +40,7 @@ class MakeListenerCommand extends Command
         $className = array_pop($pathParts);
         $relativePath = implode('/', $pathParts);
 
-        $namespace = '{{namespace}}\Services\Listeners';
+        $namespace = '{{namespace}}\Listeners';
         if (!empty($pathParts)) {
             $namespace .= '\\' . implode('\\', $pathParts);
         }
@@ -71,7 +71,7 @@ class MakeListenerCommand extends Command
     protected function getStub(string $namespace, string $className, ?string $event = null): string
     {
         $eventClass = $event ? class_basename($event) : 'object';
-        $eventImport = $event ? "use {{namespace}}\Services\Events\\{$eventClass};" : '';
+        $eventImport = $event ? "use {{namespace}}\Events\\{$eventClass};" : '';
 
         return <<<PHP
 <?php

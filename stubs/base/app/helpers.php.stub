@@ -202,7 +202,7 @@ if (! function_exists('{{functionPrefix}}_wp_user')) {
             return null;
         }
         
-        return \{{namespace}}\Services\Models\WpUser::find($wp_user->ID);
+        return \{{namespace}}\WordPress\Models\WpUser::find($wp_user->ID);
     }
 }
 
@@ -232,7 +232,7 @@ if (! function_exists('{{functionPrefix}}_get_post')) {
      */
     function {{functionPrefix}}_get_post(int $post_id)
     {
-        return \{{namespace}}\Services\Models\WpPost::find($post_id);
+        return \{{namespace}}\WordPress\Models\WpPost::find($post_id);
     }
 }
 
@@ -242,7 +242,7 @@ if (! function_exists('{{functionPrefix}}_get_meta')) {
      */
     function {{functionPrefix}}_get_meta(int $post_id, string $key, $default = null)
     {
-        $meta = \{{namespace}}\Services\Models\WpPostMeta::where('post_id', $post_id)
+        $meta = \{{namespace}}\WordPress\Models\WpPostMeta::where('post_id', $post_id)
             ->where('meta_key', $key)
             ->first();
             
@@ -356,7 +356,7 @@ if (! function_exists('{{functionPrefix}}_wp_query')) {
         // Convertir IDs de Eloquent a formato WordPress si es necesario
         if (isset($args['post__in']) && is_array($args['post__in'])) {
             $args['post__in'] = array_map(function($post) {
-                return $post instanceof \{{namespace}}\Services\Models\WpPost ? $post->ID : $post;
+                return $post instanceof \{{namespace}}\WordPress\Models\WpPost ? $post->ID : $post;
             }, $args['post__in']);
         }
         

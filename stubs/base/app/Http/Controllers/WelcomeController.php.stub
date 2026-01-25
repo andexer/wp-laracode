@@ -1,9 +1,9 @@
 <?php
 
-namespace {{namespace}}\Components\Controllers;
+namespace {{namespace}}\Http\Controllers;
 
-use {{namespace}}\Services\Models\WpPost;
-use {{namespace}}\Services\Models\WpUser;
+use {{namespace}}\WordPress\Models\WpPost;
+use {{namespace}}\WordPress\Models\WpUser;
 use Illuminate\Http\Request;
 
 class WelcomeController

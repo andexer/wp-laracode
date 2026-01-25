@@ -31,12 +31,12 @@ class MakePolicyCommand extends Command
         $className = array_pop($pathParts);
         $relativePath = implode('/', $pathParts);
 
-        $namespace = '{{namespace}}\Services\Policies';
+        $namespace = '{{namespace}}\Policies';
         if (!empty($pathParts)) {
             $namespace .= '\\' . implode('\\', $pathParts);
         }
 
-        $path = {{constantPrefix}}_PATH . 'app/Services/Policies/' . ($relativePath ? $relativePath . '/' : '') . $className . '.php';
+        $path = {{constantPrefix}}_PATH . 'app/Policies/' . ($relativePath ? $relativePath . '/' : '') . $className . '.php';
 
         $this->ensureDirectoryExists(dirname($path));
 
@@ -61,9 +61,9 @@ class MakePolicyCommand extends Command
 
     protected function getStub(string $namespace, string $className, ?string $model = null): string
     {
-        $userModel = '{{namespace}}\Services\Models\WpUser';
+        $userModel = '{{namespace}}\WordPress\Models\WpUser';
         $modelClass = $model ? class_basename($model) : null;
-        $modelImport = $model ? "use {{namespace}}\Services\Models\\{$modelClass};" : '';
+        $modelImport = $model ? "use {{namespace}}\Models\\{$modelClass};" : '';
         $modelArg = $model ? "{$modelClass} \$model" : '';
         $modelDoc = $model ? "* @param \\{{namespace}}\\Models\\{$modelClass} \$model" : '';
 

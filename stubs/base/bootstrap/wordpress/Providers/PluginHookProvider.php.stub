@@ -1,10 +1,10 @@
 <?php
 
-namespace {{namespace}}\Services\Providers;
+namespace {{namespace}}\WordPress\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use {{namespace}}\Hooks\ActivationHook;
-use {{namespace}}\Hooks\DeactivationHook;
+use {{namespace}}\WordPress\Hooks\ActivationHook;
+use {{namespace}}\WordPress\Hooks\DeactivationHook;
 
 /**
  * PluginHookProvider - Centralized WordPress hook registration.

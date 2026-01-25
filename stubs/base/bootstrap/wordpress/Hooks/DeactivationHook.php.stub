@@ -1,6 +1,6 @@
 <?php
 
-namespace {{namespace}}\Hooks;
+namespace {{namespace}}\WordPress\Hooks;
 
 use {{namespace}}\Services\CacheService;
 

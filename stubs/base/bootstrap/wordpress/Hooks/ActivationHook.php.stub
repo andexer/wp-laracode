@@ -1,10 +1,10 @@
 <?php
 
-namespace {{namespace}}\Hooks;
+namespace {{namespace}}\WordPress\Hooks;
 
 use {{namespace}}\Services\StorageService;
 use {{namespace}}\Services\CacheService;
-use {{namespace}}\Components\Controllers\WelcomeController;
+use {{namespace}}\Http\Controllers\WelcomeController;
 
 /**
  * ActivationHook - Handle plugin activation tasks.

@@ -38,12 +38,12 @@ class MakeJobCommand extends Command
         $className = array_pop($pathParts);
         $relativePath = implode('/', $pathParts);
 
-        $namespace = '{{namespace}}\Services\Jobs';
+        $namespace = '{{namespace}}\Jobs';
         if (!empty($pathParts)) {
             $namespace .= '\\' . implode('\\', $pathParts);
         }
 
-        $path = {{constantPrefix}}_PATH . 'app/Services/Jobs/' . ($relativePath ? $relativePath . '/' : '') . $className . '.php';
+        $path = {{constantPrefix}}_PATH . 'app/Jobs/' . ($relativePath ? $relativePath . '/' : '') . $className . '.php';
 
         $this->ensureDirectoryExists(dirname($path));
 

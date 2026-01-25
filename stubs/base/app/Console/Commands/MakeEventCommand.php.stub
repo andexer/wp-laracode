@@ -38,12 +38,12 @@ class MakeEventCommand extends Command
         $className = array_pop($pathParts);
         $relativePath = implode('/', $pathParts);
 
-        $namespace = '{{namespace}}\Services\Events';
+        $namespace = '{{namespace}}\Events';
         if (!empty($pathParts)) {
             $namespace .= '\\' . implode('\\', $pathParts);
         }
 
-        $path = {{constantPrefix}}_PATH . 'app/Services/Events/' . ($relativePath ? $relativePath . '/' : '') . $className . '.php';
+        $path = {{constantPrefix}}_PATH . 'app/Events/' . ($relativePath ? $relativePath . '/' : '') . $className . '.php';
 
         $this->ensureDirectoryExists(dirname($path));
 

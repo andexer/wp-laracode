@@ -1,9 +1,9 @@
 <?php
 
-namespace {{namespace}}\Services\Providers;
+namespace {{namespace}}\WordPress\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use {{namespace}}\Components\Controllers\WelcomeController;
+use {{namespace}}\Http\Controllers\WelcomeController;
 
 class WordPressIntegrationProvider extends ServiceProvider
 {

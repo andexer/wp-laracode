@@ -1,6 +1,6 @@
 <?php
 
-namespace {{namespace}}\Services\Models;
+namespace {{namespace}}\WordPress\Models;
 
 use Illuminate\Database\Eloquent\Model;
 

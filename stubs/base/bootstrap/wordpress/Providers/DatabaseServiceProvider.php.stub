@@ -1,6 +1,6 @@
 <?php
 
-namespace {{namespace}}\Services\Providers;
+namespace {{namespace}}\WordPress\Providers;
 
 use Illuminate\Database\Capsule\Manager as Capsule;
 use Illuminate\Support\ServiceProvider;

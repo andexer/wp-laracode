@@ -27,9 +27,9 @@ class AnalyzePluginCommand extends Command
         $this->newLine();
 
         $stats = [
-            'Models' => $this->countFiles('app/Services/Models'),
-            'Controllers' => $this->countFiles('app/Components/Controllers'),
-            'Livewire Components' => $this->countFiles('app/Components/Livewire'),
+            'Models' => $this->countFiles('app/Models'),
+            'Controllers' => $this->countFiles('app/Http/Controllers'),
+            'Livewire Components' => $this->countFiles('app/Http/Livewire'),
             'Views' => $this->countFiles('resources/views'),
             'Migrations' => $this->countFiles('database/migrations'),
         ];

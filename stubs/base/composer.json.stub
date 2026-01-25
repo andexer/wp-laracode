@@ -37,7 +37,8 @@
     },
     "autoload": {
         "psr-4": {
-            "{{namespace}}\\": "app/"
+            "{{namespace}}\\": "app/",
+            "{{namespace}}\\WordPress\\": "bootstrap/wordpress/"
         },
         "files": [
             "app/helpers.php"

@@ -88,10 +88,10 @@ return [
         Illuminate\Translation\TranslationServiceProvider::class,
         Illuminate\Validation\ValidationServiceProvider::class,
         Illuminate\Pipeline\PipelineServiceProvider::class,
-        {{namespace}}\Services\Providers\AppServiceProvider::class,
-        {{namespace}}\Services\Providers\DatabaseServiceProvider::class,
-        {{namespace}}\Services\Providers\LivewireServiceProvider::class,
-        {{namespace}}\Services\Providers\WordPressIntegrationProvider::class,
+        {{namespace}}\Providers\AppServiceProvider::class,
+        {{namespace}}\WordPress\Providers\DatabaseServiceProvider::class,
+        {{namespace}}\WordPress\Providers\LivewireServiceProvider::class,
+        {{namespace}}\WordPress\Providers\WordPressIntegrationProvider::class,
     ],
 
 ];

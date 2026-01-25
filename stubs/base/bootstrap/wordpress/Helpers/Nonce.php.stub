@@ -1,6 +1,6 @@
 <?php
 
-namespace {{namespace}}\Helpers;
+namespace {{namespace}}\WordPress\Helpers;
 
 /**
  * WordPress Nonce Helper for security.
