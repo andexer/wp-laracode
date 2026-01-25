@@ -90,8 +90,6 @@ class PluginServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        $this->loadHelpersFromDirectory();
-
         // Load translations
         $this->app->make('translator')->addNamespace(
             '{{slug}}',
@@ -101,30 +99,6 @@ class PluginServiceProvider extends ServiceProvider
         // Load Routes
         if (file_exists({{constantPrefix}}_PATH . 'routes/web.php')) {
             $this->loadRoutesFrom({{constantPrefix}}_PATH . 'routes/web.php');
-        }
-    }
-
-    /**
-     * Load additional helper files from the Helpers directory.
-     *
-     * @return void
-     */
-    protected function loadHelpersFromDirectory(): void
-    {
-        $helpersPath = {{constantPrefix}}_PATH . 'app/Helpers';
-
-        if (!is_dir($helpersPath)) {
-            return;
-        }
-
-        $helperFiles = glob($helpersPath . '/*.php');
-
-        foreach ($helperFiles as $file) {
-            $content = file_get_contents($file);
-            if (strpos($content, 'namespace ') === false || strpos($content, 'class ') !== false) {
-                continue;
-            }
-            require_once $file;
         }
     }
 }

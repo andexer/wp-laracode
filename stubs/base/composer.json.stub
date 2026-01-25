@@ -41,7 +41,8 @@
             "{{namespace}}\\WordPress\\": "bootstrap/wordpress/"
         },
         "files": [
-            "app/helpers.php"
+            "app/helpers.php",
+            "bootstrap/wordpress/bridge.php"
         ]
     },
     "config": {

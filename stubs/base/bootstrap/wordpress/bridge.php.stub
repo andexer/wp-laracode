@@ -1,6 +1,6 @@
 <?php
 
-use {{namespace}}\Providers\PluginHookProvider;
+use {{namespace}}\WordPress\Providers\PluginHookProvider;
 
 /*
 |--------------------------------------------------------------------------
@@ -11,7 +11,7 @@ use {{namespace}}\Providers\PluginHookProvider;
 |
 */
 
-$app = require_once __DIR__ . '/app.php';
+$app = require_once dirname(__DIR__) . '/app.php';
 
 /*
 |--------------------------------------------------------------------------

@@ -40,9 +40,3 @@ if (!file_exists($autoloader = __DIR__ . '/vendor/autoload.php')) {
 }
 
 require_once $autoloader;
-
-// Load helpers
-require_once __DIR__ . '/app/helpers.php';
-
-// Bootstrap and register hooks
-require_once __DIR__ . '/bootstrap/plugin-hooks.php';

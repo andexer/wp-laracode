@@ -22,7 +22,7 @@ class NewCommand extends Command
         {--description= : The plugin description}
         {--namespace= : The root namespace (e.g., MyPlugin)}
         {--license=GPL-2.0-or-later : The license (GPL-2.0-or-later, MIT, etc.)}
-        {--template=base : Template to use (minimal, base)}
+        {--template=base : Template to use (base)}
         {--force : Overwrite existing files}';
 
 	/**
@@ -30,7 +30,7 @@ class NewCommand extends Command
 	 *
 	 * @var array
 	 */
-	protected array $availableTemplates = ['minimal', 'base'];
+	protected array $availableTemplates = ['base'];
 
 	/**
 	 * The console command description.
