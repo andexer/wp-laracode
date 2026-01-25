@@ -58,6 +58,7 @@ $app->register(new {{namespace}}\Providers\WordPressIntegrationProvider($app));
 */
 
 $app->singleton(Illuminate\Contracts\Console\Kernel::class, {{namespace}}\Console\Kernel::class);
+$app->singleton(Illuminate\Contracts\Debug\ExceptionHandler::class, {{namespace}}\Exceptions\Handler::class);
 
 /*
 |--------------------------------------------------------------------------
