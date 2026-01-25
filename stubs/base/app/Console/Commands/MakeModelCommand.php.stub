@@ -3,119 +3,76 @@
 namespace {{namespace}}\Console\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
 
-class MakeModelCommand extends Command
+class MakeModelCommand extends BaseGeneratorCommand
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
     protected $signature = 'make:model
         {name : The name of the model}
         {--m|migration : Create a new migration file for the model}
         {--f|factory : Create a new factory for the model}
         {--s|seed : Create a new seeder for the model}';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
     protected $description = 'Create a new Eloquent model';
 
-    /**
-     * @var Filesystem
-     */
-    protected $filesystem;
+    protected string $type = 'Model';
+    protected string $baseDirectory = 'app/Models';
 
-    public function __construct(Filesystem $filesystem)
-    {
-        parent::__construct();
-        $this->filesystem = $filesystem;
-    }
-
-    /**
-     * Execute the console command.
-     */
     public function handle(): int
     {
-        $name = $this->argument('name');
+        $parsed = $this->parseName($this->argument('name'));
+        $namespace = $this->getNamespace($parsed['pathParts'], 'Models');
+        $path = $this->getFilePath($parsed['relativePath'], $parsed['className']);
 
-        // Normalize name for subdirectories
-        $name = str_replace(['/', '\\'], '/', $name);
-        $pathParts = explode('/', $name);
-        $className = array_pop($pathParts);
-        $relativePath = implode('/', $pathParts);
-
-        // Determine Namespace
-        $namespace = '{{namespace}}\Models';
-        if (!empty($pathParts)) {
-            $namespace .= '\\' . implode('\\', $pathParts);
-        }
-
-        $className = Str::studly($className);
-
-        $modelPath = $this->getModelPath($relativePath, $className);
-        $this->ensureDirectoryExists(dirname($modelPath));
-
-        if ($this->filesystem->exists($modelPath)) {
-            $this->error("Model [{$className}] already exists!");
+        if (!$this->writeFile($path, $this->getStub($namespace, $parsed['className']))) {
             return Command::FAILURE;
         }
 
-        $this->filesystem->put($modelPath, $this->getModelStub($namespace, $className));
-        $this->info("Model [{$className}] created successfully.");
-
         if ($this->option('migration')) {
-            $this->createMigration($className);
+            $this->createMigration($parsed['className']);
         }
 
         if ($this->option('factory')) {
             $this->call('make:factory', [
-                'name' => "{$className}Factory",
-                '--model' => $className,
+                'name' => "{$parsed['className']}Factory",
+                '--model' => $parsed['className'],
             ]);
         }
 
         if ($this->option('seed')) {
-            $this->call('make:seeded', [
-                'name' => "{$className}Seeder",
+            $this->call('make:seeder', [
+                'name' => "{$parsed['className']}Seeder",
             ]);
         }
 
         return Command::SUCCESS;
     }
 
-    protected function getModelPath(string $relativePath, string $className): string
+    protected function getFilePath(string $relativePath, string $className, string $subDirectory = ''): string
     {
-        return {{constantPrefix}}_PATH . 'app/Models/' . ($relativePath ? $relativePath . '/' : '') . $className . '.php';
-    }
+        $basePath = {{constantPrefix}}_PATH . 'app/Models';
 
-    protected function ensureDirectoryExists(string $path): void
-    {
-        if (!$this->filesystem->isDirectory($path)) {
-            $this->filesystem->makeDirectory($path, 0755, true);
+        if ($relativePath) {
+            $basePath .= '/' . $relativePath;
         }
+
+        return $basePath . '/' . $className . '.php';
     }
 
     protected function createMigration(string $modelName): void
     {
-        // Migration table name is usually plural of the model class name, avoiding directory structure
         $tableName = Str::snake(Str::pluralStudly($modelName));
         $timestamp = date('Y_m_d_His');
         $migrationName = "create_{$tableName}_table";
 
         $migrationPath = {{constantPrefix}}_PATH . "database/migrations/{$timestamp}_{$migrationName}.php";
-        $this->ensureDirectoryExists(dirname($migrationPath));
+        $this->ensureDirectoryExists($migrationPath);
 
         $this->filesystem->put($migrationPath, $this->getMigrationStub($tableName));
         $this->info("Migration [{$migrationName}] created successfully.");
     }
 
-    protected function getModelStub(string $namespace, string $className): string
+    protected function getStub(string $namespace, string $className): string
     {
         $tableName = Str::snake(Str::pluralStudly($className));
 
@@ -128,27 +85,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class {$className} extends Model
 {
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
     protected \$table = '{$tableName}';
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected \$fillable = [
         //
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected \$casts = [
         //
     ];
@@ -167,9 +109,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('{$tableName}', function (Blueprint \$table) {
@@ -178,9 +117,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('{$tableName}');

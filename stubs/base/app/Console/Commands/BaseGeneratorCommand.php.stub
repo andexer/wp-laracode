@@ -1,0 +1,153 @@
+<?php
+
+namespace {{namespace}}\Console\Commands;
+
+use Illuminate\Console\Command;
+use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Str;
+
+/**
+ * BaseGeneratorCommand - Abstract base for all make:* commands.
+ *
+ * Centralizes common logic like path resolution, namespace generation,
+ * directory creation, and file writing.
+ */
+abstract class BaseGeneratorCommand extends Command
+{
+    /**
+     * @var Filesystem
+     */
+    protected Filesystem $filesystem;
+
+    /**
+     * The type of class being generated.
+     *
+     * @var string
+     */
+    protected string $type = 'Class';
+
+    /**
+     * The base directory relative to plugin root.
+     *
+     * @var string
+     */
+    protected string $baseDirectory = 'app';
+
+    /**
+     * The base namespace segment.
+     *
+     * @var string
+     */
+    protected string $baseNamespace = '{{namespace}}';
+
+    public function __construct(Filesystem $filesystem)
+    {
+        parent::__construct();
+        $this->filesystem = $filesystem;
+    }
+
+    /**
+     * Parse the name argument to extract class name and relative path.
+     *
+     * @param string $name
+     * @return array{className: string, relativePath: string, pathParts: array}
+     */
+    protected function parseName(string $name): array
+    {
+        $name = str_replace(['/', '\\'], '/', $name);
+        $pathParts = explode('/', $name);
+        $className = Str::studly(array_pop($pathParts));
+        $relativePath = implode('/', $pathParts);
+
+        return compact('className', 'relativePath', 'pathParts');
+    }
+
+    /**
+     * Get the full namespace for the generated class.
+     *
+     * @param array $pathParts
+     * @param string $subNamespace
+     * @return string
+     */
+    protected function getNamespace(array $pathParts, string $subNamespace = ''): string
+    {
+        $namespace = $this->baseNamespace;
+
+        if ($subNamespace) {
+            $namespace .= '\\' . $subNamespace;
+        }
+
+        if (!empty($pathParts)) {
+            $namespace .= '\\' . implode('\\', $pathParts);
+        }
+
+        return $namespace;
+    }
+
+    /**
+     * Get the full path where the generated file should be written.
+     *
+     * @param string $relativePath
+     * @param string $className
+     * @param string $subDirectory
+     * @return string
+     */
+    protected function getFilePath(string $relativePath, string $className, string $subDirectory = ''): string
+    {
+        $basePath = {{constantPrefix}}_PATH . $this->baseDirectory;
+
+        if ($subDirectory) {
+            $basePath .= '/' . $subDirectory;
+        }
+
+        if ($relativePath) {
+            $basePath .= '/' . $relativePath;
+        }
+
+        return $basePath . '/' . $className . '.php';
+    }
+
+    /**
+     * Ensure the directory for the file path exists.
+     *
+     * @param string $path
+     * @return void
+     */
+    protected function ensureDirectoryExists(string $path): void
+    {
+        $directory = dirname($path);
+        if (!$this->filesystem->isDirectory($directory)) {
+            $this->filesystem->makeDirectory($directory, 0755, true);
+        }
+    }
+
+    /**
+     * Write content to a file path, checking for existing files.
+     *
+     * @param string $path
+     * @param string $content
+     * @return bool True if file was written, false if it already exists.
+     */
+    protected function writeFile(string $path, string $content): bool
+    {
+        $this->ensureDirectoryExists($path);
+
+        if ($this->filesystem->exists($path)) {
+            $this->error("{$this->type} already exists!");
+            return false;
+        }
+
+        $this->filesystem->put($path, $content);
+        $this->info("{$this->type} created successfully.");
+        return true;
+    }
+
+    /**
+     * Get the stub content for the class being generated.
+     *
+     * @param string $namespace
+     * @param string $className
+     * @return string
+     */
+    abstract protected function getStub(string $namespace, string $className): string;
+}
