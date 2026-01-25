@@ -1,0 +1,35 @@
+<?php
+
+namespace {{namespace}}\Http\Middleware;
+
+class CapabilityCheckMiddleware
+{
+    /**
+     * Handle an incoming request.
+     *
+     * @param \WP_REST_Request $request
+     * @param \Closure $next
+     * @param string $capability WordPress capability to check
+     * @return mixed
+     */
+    public function handle(\WP_REST_Request $request, \Closure $next, string $capability = 'read')
+    {
+        if (!is_user_logged_in()) {
+            return new \WP_Error(
+                'rest_not_logged_in',
+                __('You must be logged in to access this resource.', '{{slug}}'),
+                ['status' => 401]
+            );
+        }
+
+        if (!current_user_can($capability)) {
+            return new \WP_Error(
+                'rest_forbidden',
+                __('You do not have permission to access this resource.', '{{slug}}'),
+                ['status' => 403]
+            );
+        }
+
+        return $next($request);
+    }
+}

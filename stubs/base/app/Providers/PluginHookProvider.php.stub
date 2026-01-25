@@ -1,0 +1,60 @@
+<?php
+
+namespace {{namespace}}\Providers;
+
+use Illuminate\Support\ServiceProvider;
+use {{namespace}}\Hooks\ActivationHook;
+use {{namespace}}\Hooks\DeactivationHook;
+
+/**
+ * PluginHookProvider - Centralized WordPress hook registration.
+ */
+class PluginHookProvider extends ServiceProvider
+{
+    /**
+     * Register plugin hooks.
+     *
+     * @return void
+     */
+    public function register(): void
+    {
+        $this->registerActivationHook();
+        $this->registerDeactivationHook();
+    }
+
+    /**
+     * Boot the service provider.
+     *
+     * @return void
+     */
+    public function boot(): void
+    {
+        // Additional boot logic can be added here
+    }
+
+    /**
+     * Register the activation hook.
+     *
+     * @return void
+     */
+    protected function registerActivationHook(): void
+    {
+        register_activation_hook({{constantPrefix}}_FILE, function () {
+            $hook = $this->app->make(ActivationHook::class);
+            $hook->handle();
+        });
+    }
+
+    /**
+     * Register the deactivation hook.
+     *
+     * @return void
+     */
+    protected function registerDeactivationHook(): void
+    {
+        register_deactivation_hook({{constantPrefix}}_FILE, function () {
+            $hook = $this->app->make(DeactivationHook::class);
+            $hook->handle();
+        });
+    }
+}

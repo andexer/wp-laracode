@@ -1,0 +1,74 @@
+<?php
+
+namespace {{namespace}}\Http\Middleware;
+
+class RateLimitMiddleware
+{
+    /**
+     * Handle an incoming request with rate limiting.
+     *
+     * @param \WP_REST_Request $request
+     * @param \Closure $next
+     * @param int $maxAttempts Maximum attempts allowed
+     * @param int $decayMinutes Time window in minutes
+     * @return mixed
+     */
+    public function handle(\WP_REST_Request $request, \Closure $next, int $maxAttempts = 60, int $decayMinutes = 1)
+    {
+        $key = $this->resolveRequestSignature($request);
+        $attempts = (int) get_transient($key);
+
+        if ($attempts >= $maxAttempts) {
+            return new \WP_Error(
+                'rest_too_many_requests',
+                __('Too many requests. Please try again later.', '{{slug}}'),
+                [
+                    'status' => 429,
+                    'retry_after' => $decayMinutes * 60,
+                ]
+            );
+        }
+
+        set_transient($key, $attempts + 1, $decayMinutes * 60);
+
+        return $next($request);
+    }
+
+    /**
+     * Generate a unique key for rate limiting based on IP and route.
+     *
+     * @param \WP_REST_Request $request
+     * @return string
+     */
+    protected function resolveRequestSignature(\WP_REST_Request $request): string
+    {
+        $ip = $this->getClientIp();
+        $route = $request->get_route();
+
+        return '{{slug}}_rate_limit:' . md5($ip . ':' . $route);
+    }
+
+    /**
+     * Get the client IP address.
+     *
+     * @return string
+     */
+    protected function getClientIp(): string
+    {
+        $keys = [
+            'HTTP_CF_CONNECTING_IP', // Cloudflare
+            'HTTP_X_FORWARDED_FOR',
+            'HTTP_X_REAL_IP',
+            'REMOTE_ADDR',
+        ];
+
+        foreach ($keys as $key) {
+            if (!empty($_SERVER[$key])) {
+                $ip = explode(',', $_SERVER[$key])[0];
+                return trim($ip);
+            }
+        }
+
+        return '127.0.0.1';
+    }
+}

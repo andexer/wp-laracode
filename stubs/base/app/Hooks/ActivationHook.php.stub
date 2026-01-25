@@ -1,0 +1,112 @@
+<?php
+
+namespace {{namespace}}\Hooks;
+
+use {{namespace}}\Services\StorageService;
+use {{namespace}}\Services\CacheService;
+
+/**
+ * ActivationHook - Handle plugin activation tasks.
+ */
+class ActivationHook
+{
+    public function __construct(
+        protected StorageService $storage,
+        protected CacheService $cache
+    ) {}
+
+    /**
+     * Handle plugin activation.
+     *
+     * @return void
+     */
+    public function handle(): void
+    {
+        $this->setupStorage();
+        $this->runMigrations();
+        $this->runSeeders();
+        $this->storeVersion();
+        $this->clearCache();
+        $this->logActivation();
+    }
+
+    /**
+     * Setup storage directories and protection files.
+     *
+     * @return void
+     */
+    protected function setupStorage(): void
+    {
+        $this->storage->ensureDirectories();
+        $this->storage->createHtaccess();
+        $this->storage->createIndexFiles();
+    }
+
+    /**
+     * Run database migrations if available.
+     *
+     * @return void
+     */
+    protected function runMigrations(): void
+    {
+        if (!{{functionPrefix}}_config('plugin.hooks.activation.run_migrations', true)) {
+            return;
+        }
+
+        if (class_exists(\{{namespace}}\Database\Migrator::class)) {
+            $migrator = {{functionPrefix}}_app(\{{namespace}}\Database\Migrator::class);
+            $migrator->run();
+        }
+    }
+
+    /**
+     * Run database seeders if available.
+     *
+     * @return void
+     */
+    protected function runSeeders(): void
+    {
+        if (!{{functionPrefix}}_config('plugin.hooks.activation.run_seeders', true)) {
+            return;
+        }
+
+        if (class_exists(\{{namespace}}\Database\Seeders\DatabaseSeeder::class)) {
+            $seeder = {{functionPrefix}}_app(\{{namespace}}\Database\Seeders\DatabaseSeeder::class);
+            $seeder->run();
+        }
+    }
+
+    /**
+     * Store plugin version for future updates.
+     *
+     * @return void
+     */
+    protected function storeVersion(): void
+    {
+        update_option('{{slug}}_version', {{constantPrefix}}_VERSION);
+    }
+
+    /**
+     * Clear caches after activation.
+     *
+     * @return void
+     */
+    protected function clearCache(): void
+    {
+        if ({{functionPrefix}}_config('plugin.hooks.activation.clear_cache', true)) {
+            $this->cache->clearWordPressCache();
+        }
+    }
+
+    /**
+     * Log activation event.
+     *
+     * @return void
+     */
+    protected function logActivation(): void
+    {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('[{{slug}}] Plugin activated successfully.');
+        }
+    }
+}

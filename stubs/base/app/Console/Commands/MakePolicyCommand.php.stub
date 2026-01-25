@@ -1,0 +1,167 @@
+<?php
+
+namespace {{namespace}}\Console\Commands;
+
+use Illuminate\Console\Command;
+use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Str;
+
+class MakePolicyCommand extends Command
+{
+    protected $signature = 'make:policy
+        {name : The name of the policy}
+        {--model= : The model that the policy applies to}';
+
+    protected $description = 'Create a new policy class';
+
+    protected Filesystem $filesystem;
+
+    public function __construct(Filesystem $filesystem)
+    {
+        parent::__construct();
+        $this->filesystem = $filesystem;
+    }
+
+    public function handle(): int
+    {
+        $name = $this->argument('name');
+
+        $name = str_replace(['/', '\\'], '/', $name);
+        $pathParts = explode('/', $name);
+        $className = array_pop($pathParts);
+        $relativePath = implode('/', $pathParts);
+
+        $namespace = '{{namespace}}\Policies';
+        if (!empty($pathParts)) {
+            $namespace .= '\\' . implode('\\', $pathParts);
+        }
+
+        $path = {{constantPrefix}}_PATH . 'app/Policies/' . ($relativePath ? $relativePath . '/' : '') . $className . '.php';
+
+        $this->ensureDirectoryExists(dirname($path));
+
+        if ($this->filesystem->exists($path)) {
+            $this->error("Policy [{$className}] already exists!");
+            return Command::FAILURE;
+        }
+
+        $model = $this->option('model');
+        $this->filesystem->put($path, $this->getStub($namespace, $className, $model));
+
+        $this->info("Policy [{$className}] created successfully.");
+        return Command::SUCCESS;
+    }
+
+    protected function ensureDirectoryExists(string $path): void
+    {
+        if (!$this->filesystem->isDirectory($path)) {
+            $this->filesystem->makeDirectory($path, 0755, true);
+        }
+    }
+
+    protected function getStub(string $namespace, string $className, ?string $model = null): string
+    {
+        $userModel = '{{namespace}}\Models\WpUser';
+        $modelClass = $model ? class_basename($model) : null;
+        $modelImport = $model ? "use {{namespace}}\Models\\{$modelClass};" : '';
+        $modelArg = $model ? "{$modelClass} \$model" : '';
+        $modelDoc = $model ? "* @param \\{{namespace}}\\Models\\{$modelClass} \$model" : '';
+
+        return <<<PHP
+<?php
+
+namespace {$namespace};
+
+use {$userModel};
+{$modelImport}
+use Illuminate\Auth\Access\HandlesAuthorization;
+
+class {$className}
+{
+    use HandlesAuthorization;
+
+    /**
+     * Determine whether the user can view any models.
+     *
+     * @param \\{$userModel} \$user
+     * @return \\Illuminate\Auth\Access\Response|bool
+     */
+    public function viewAny(WpUser \$user)
+    {
+        //
+    }
+
+    /**
+     * Determine whether the user can view the model.
+     *
+     * @param \\{$userModel} \$user
+     * {$modelDoc}
+     * @return \\Illuminate\Auth\Access\Response|bool
+     */
+    public function view(WpUser \$user, {$modelArg})
+    {
+        //
+    }
+
+    /**
+     * Determine whether the user can create models.
+     *
+     * @param \\{$userModel} \$user
+     * @return \\Illuminate\Auth\Access\Response|bool
+     */
+    public function create(WpUser \$user)
+    {
+        //
+    }
+
+    /**
+     * Determine whether the user can update the model.
+     *
+     * @param \\{$userModel} \$user
+     * {$modelDoc}
+     * @return \\Illuminate\Auth\Access\Response|bool
+     */
+    public function update(WpUser \$user, {$modelArg})
+    {
+        //
+    }
+
+    /**
+     * Determine whether the user can delete the model.
+     *
+     * @param \\{$userModel} \$user
+     * {$modelDoc}
+     * @return \\Illuminate\Auth\Access\Response|bool
+     */
+    public function delete(WpUser \$user, {$modelArg})
+    {
+        //
+    }
+
+    /**
+     * Determine whether the user can restore the model.
+     *
+     * @param \\{$userModel} \$user
+     * {$modelDoc}
+     * @return \\Illuminate\Auth\Access\Response|bool
+     */
+    public function restore(WpUser \$user, {$modelArg})
+    {
+        //
+    }
+
+    /**
+     * Determine whether the user can permanently delete the model.
+     *
+     * @param \\{$userModel} \$user
+     * {$modelDoc}
+     * @return \\Illuminate\Auth\Access\Response|bool
+     */
+    public function forceDelete(WpUser \$user, {$modelArg})
+    {
+        //
+    }
+}
+PHP;
+    }
+}

@@ -15,7 +15,9 @@ class MakeModelCommand extends Command
      */
     protected $signature = 'make:model
         {name : The name of the model}
-        {--m|migration : Create a new migration file for the model}';
+        {--m|migration : Create a new migration file for the model}
+        {--f|factory : Create a new factory for the model}
+        {--s|seed : Create a new seeder for the model}';
 
     /**
      * The console command description.
@@ -69,6 +71,19 @@ class MakeModelCommand extends Command
 
         if ($this->option('migration')) {
             $this->createMigration($className);
+        }
+
+        if ($this->option('factory')) {
+            $this->call('make:factory', [
+                'name' => "{$className}Factory",
+                '--model' => $className,
+            ]);
+        }
+
+        if ($this->option('seed')) {
+            $this->call('make:seeded', [
+                'name' => "{$className}Seeder",
+            ]);
         }
 
         return Command::SUCCESS;

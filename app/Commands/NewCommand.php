@@ -74,6 +74,11 @@ class NewCommand extends Command
 
         $this->info("Plugin '{$placeholders['{{pluginName}}']}' created successfully!");
         $this->newLine();
+        
+        $this->line("🌟 <options=bold>Support the project!</> If you find wp-laracode useful, please consider giving us a star on GitHub:");
+        $this->line("👉 <href=https://github.com/andexer/wp-laracode>https://github.com/andexer/wp-laracode</>");
+        $this->newLine();
+
         $this->comment("Next steps:");
         $this->line("  1. cd {$placeholders['{{slug}}']}");
         $this->line("  2. ./{$placeholders['{{slug}}']} list");

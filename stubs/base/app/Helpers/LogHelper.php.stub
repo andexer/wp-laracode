@@ -1,0 +1,131 @@
+<?php
+
+namespace {{namespace}}\Helpers;
+
+/**
+ * Structured logging helper with security event tracking.
+ */
+class LogHelper
+{
+    /**
+     * Log an informational message.
+     *
+     * @param string $message
+     * @param array $context
+     * @return void
+     */
+    public static function info(string $message, array $context = []): void
+    {
+        self::log('info', $message, $context);
+    }
+
+    /**
+     * Log a warning message.
+     *
+     * @param string $message
+     * @param array $context
+     * @return void
+     */
+    public static function warning(string $message, array $context = []): void
+    {
+        self::log('warning', $message, $context);
+    }
+
+    /**
+     * Log an error message.
+     *
+     * @param string $message
+     * @param array $context
+     * @return void
+     */
+    public static function error(string $message, array $context = []): void
+    {
+        self::log('error', $message, $context);
+    }
+
+    /**
+     * Log a security event.
+     *
+     * @param string $message
+     * @param array $context
+     * @return void
+     */
+    public static function security(string $message, array $context = []): void
+    {
+        $context['type'] = 'security';
+        $context['ip'] = self::getClientIp();
+        $context['user_id'] = get_current_user_id();
+
+        self::log('warning', '[SECURITY] ' . $message, $context);
+
+        // Optional: Send email alert for critical security events
+        if (!empty($context['critical']) && get_option('{{slug}}_security_alerts', false)) {
+            self::sendSecurityAlert($message, $context);
+        }
+    }
+
+    /**
+     * Log a message to the plugin's log file.
+     *
+     * @param string $level
+     * @param string $message
+     * @param array $context
+     * @return void
+     */
+    protected static function log(string $level, string $message, array $context = []): void
+    {
+        $context['plugin'] = '{{slug}}';
+        $context['timestamp'] = current_time('mysql');
+
+        $logFile = {{functionPrefix}}_storage_path('logs/plugin.log');
+        $formattedContext = !empty($context) ? ' ' . json_encode($context, JSON_UNESCAPED_SLASHES) : '';
+        $logMessage = "[{$context['timestamp']}] {$level}: {$message}{$formattedContext}" . PHP_EOL;
+
+        // Ensure log directory exists
+        $logDir = dirname($logFile);
+        if (!is_dir($logDir)) {
+            wp_mkdir_p($logDir);
+        }
+
+        file_put_contents($logFile, $logMessage, FILE_APPEND | LOCK_EX);
+
+        // Also log to PHP error log if WP_DEBUG is enabled
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('[{{slug}}] ' . $message . $formattedContext);
+        }
+    }
+
+    /**
+     * Get the client IP address.
+     *
+     * @return string
+     */
+    protected static function getClientIp(): string
+    {
+        $keys = ['HTTP_CF_CONNECTING_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP', 'REMOTE_ADDR'];
+
+        foreach ($keys as $key) {
+            if (!empty($_SERVER[$key])) {
+                return trim(explode(',', $_SERVER[$key])[0]);
+            }
+        }
+
+        return '127.0.0.1';
+    }
+
+    /**
+     * Send a security alert email.
+     *
+     * @param string $message
+     * @param array $context
+     * @return void
+     */
+    protected static function sendSecurityAlert(string $message, array $context): void
+    {
+        $adminEmail = get_option('admin_email');
+        $subject = '[{{pluginName}}] Security Alert';
+        $body = "Security event detected:\n\n{$message}\n\nContext:\n" . print_r($context, true);
+
+        wp_mail($adminEmail, $subject, $body);
+    }
+}

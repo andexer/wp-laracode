@@ -1,0 +1,88 @@
+<?php
+
+namespace {{namespace}}\Hooks;
+
+use {{namespace}}\Services\CacheService;
+
+/**
+ * DeactivationHook - Handle plugin deactivation tasks.
+ */
+class DeactivationHook
+{
+    public function __construct(
+        protected CacheService $cache
+    ) {}
+
+    /**
+     * Handle plugin deactivation.
+     *
+     * @return void
+     */
+    public function handle(): void
+    {
+        $this->clearCache();
+        $this->clearViews();
+        $this->clearSessions();
+        $this->truncateLogs();
+        $this->logDeactivation();
+    }
+
+    /**
+     * Clear plugin cache.
+     *
+     * @return void
+     */
+    protected function clearCache(): void
+    {
+        if ({{functionPrefix}}_config('plugin.hooks.deactivation.clear_cache', true)) {
+            $this->cache->clearPluginCache();
+            $this->cache->clearWordPressCache();
+        }
+    }
+
+    /**
+     * Clear compiled views.
+     *
+     * @return void
+     */
+    protected function clearViews(): void
+    {
+        $this->cache->clearCompiledViews();
+    }
+
+    /**
+     * Clear session files.
+     *
+     * @return void
+     */
+    protected function clearSessions(): void
+    {
+        if ({{functionPrefix}}_config('plugin.hooks.deactivation.clear_sessions', true)) {
+            $this->cache->clearSessions();
+        }
+    }
+
+    /**
+     * Truncate log files if too large.
+     *
+     * @return void
+     */
+    protected function truncateLogs(): void
+    {
+        if ({{functionPrefix}}_config('plugin.hooks.deactivation.clear_logs', false)) {
+            $this->cache->truncateLogs();
+        }
+    }
+
+    /**
+     * Log deactivation event.
+     *
+     * @return void
+     */
+    protected function logDeactivation(): void
+    {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('[{{slug}}] Plugin deactivated, cache cleared.');
+        }
+    }
+}

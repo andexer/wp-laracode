@@ -12,7 +12,8 @@ class MakeControllerCommand extends Command
         {name : The name of the controller}
         {--invokable : Generate a single method, invokable controller}
         {--resource : Generate a resource controller}
-        {--api : Generate an API resource controller}';
+        {--api : Generate an API resource controller}
+        {--model= : The model that the controller controls}';
 
     protected $description = 'Create a new controller class';
 
@@ -57,12 +58,14 @@ class MakeControllerCommand extends Command
         }
 
         // Generate Content
+        $modelName = $this->option('model');
+
         if ($this->option('invokable')) {
             $content = $this->getInvokableStub($namespace, $className);
         } elseif ($this->option('api')) {
-            $content = $this->getApiStub($namespace, $className);
+            $content = $this->getApiStub($namespace, $className, $modelName);
         } elseif ($this->option('resource')) {
-            $content = $this->getResourceStub($namespace, $className);
+            $content = $this->getResourceStub($namespace, $className, $modelName);
         } else {
             $content = $this->getPlainStub($namespace, $className);
         }
@@ -134,14 +137,25 @@ class {$className}
 PHP;
     }
 
-    protected function getResourceStub(string $namespace, string $className): string
+    protected function getResourceStub(string $namespace, string $className, ?string $modelName = null): string
     {
+        $useModel = '';
+        $modelClass = '';
+        $modelVariable = '';
+
+        if ($modelName) {
+            $modelClass = class_basename($modelName);
+            $modelVariable = '$' . Str::camel($modelClass);
+            $useModel = "use {{namespace}}\\Models\\{$modelClass};";
+        }
+
         return <<<PHP
 <?php
 
 namespace {$namespace};
 
 use Illuminate\Http\Request;
+{$useModel}
 
 class {$className}
 {
@@ -204,14 +218,25 @@ class {$className}
 PHP;
     }
 
-    protected function getApiStub(string $namespace, string $className): string
+    protected function getApiStub(string $namespace, string $className, ?string $modelName = null): string
     {
+        $useModel = '';
+        $modelClass = '';
+        $modelVariable = '';
+
+        if ($modelName) {
+            $modelClass = class_basename($modelName);
+            $modelVariable = '$' . Str::camel($modelClass);
+            $useModel = "use {{namespace}}\\Models\\{$modelClass};";
+        }
+
         return <<<PHP
 <?php
 
 namespace {$namespace};
 
 use Illuminate\Http\Request;
+{$useModel}
 
 class {$className}
 {

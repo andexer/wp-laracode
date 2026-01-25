@@ -1,0 +1,52 @@
+<?php
+
+/**
+ * API Routes
+ *
+ * These routes are loaded by the PluginServiceProvider within a group that
+ * has the plugin's slug as a prefix.
+ *
+ * All routes here are automatically prefixed with: {{slug}}/v1
+ */
+
+use Illuminate\Support\Facades\Route;
+
+/*
+|--------------------------------------------------------------------------
+| Public API Routes
+|--------------------------------------------------------------------------
+|
+| Routes accessible without authentication, with basic rate limiting.
+|
+*/
+
+Route::middleware(['rate_limit:30,1'])->group(function () {
+    // Route::get('/public/info', [ApiController::class, 'info']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| Authenticated API Routes
+|--------------------------------------------------------------------------
+|
+| Routes that require a valid nonce and logged-in user.
+|
+*/
+
+Route::middleware(['nonce', 'sanitize'])->group(function () {
+    // Route::post('/data', [ApiController::class, 'store']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| Admin API Routes
+|--------------------------------------------------------------------------
+|
+| Routes that require administrator capabilities.
+|
+*/
+
+Route::middleware(['nonce', 'capability:manage_options', 'sanitize', 'rate_limit:60,1'])->group(function () {
+    // Route::post('/admin/settings', [AdminController::class, 'updateSettings']);
+    // Route::delete('/admin/cache', [AdminController::class, 'clearCache']);
+});

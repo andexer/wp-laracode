@@ -1,0 +1,40 @@
+<?php
+
+use {{namespace}}\Providers\PluginHookProvider;
+
+/*
+|--------------------------------------------------------------------------
+| Bootstrap the Application
+|--------------------------------------------------------------------------
+|
+| Load the application instance and register the hook provider.
+|
+*/
+
+$app = require_once __DIR__ . '/app.php';
+
+/*
+|--------------------------------------------------------------------------
+| Register Hook Provider
+|--------------------------------------------------------------------------
+|
+| The PluginHookProvider handles all WordPress hook registration,
+| including activation, deactivation, and other lifecycle hooks.
+|
+*/
+
+$app->register(new PluginHookProvider($app));
+
+/*
+|--------------------------------------------------------------------------
+| Boot Application on plugins_loaded
+|--------------------------------------------------------------------------
+|
+| WordPress fires 'plugins_loaded' after all plugins are loaded.
+| This is the ideal time to boot our application.
+|
+*/
+
+add_action('plugins_loaded', function () use ($app) {
+    $app->boot();
+}, 5);

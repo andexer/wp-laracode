@@ -190,3 +190,176 @@ if (! function_exists('{{functionPrefix}}_trans')) {
         return {{functionPrefix}}_app('translator')->get($key, $replace, $locale);
     }
 }
+
+if (! function_exists('{{functionPrefix}}_wp_user')) {
+    /**
+     * Get current WordPress user as Eloquent model.
+     */
+    function {{functionPrefix}}_wp_user()
+    {
+        $wp_user = wp_get_current_user();
+        if ($wp_user->ID === 0) {
+            return null;
+        }
+        
+        return \{{namespace}}\Models\WpUser::find($wp_user->ID);
+    }
+}
+
+if (! function_exists('{{functionPrefix}}_can')) {
+    /**
+     * Check if current user has WordPress capability.
+     */
+    function {{functionPrefix}}_can(string $capability, ...$args): bool
+    {
+        return current_user_can($capability, ...$args);
+    }
+}
+
+if (! function_exists('{{functionPrefix}}_admin_url')) {
+    /**
+     * Get WordPress admin URL with plugin page.
+     */
+    function {{functionPrefix}}_admin_url(string $page = ''): string
+    {
+        return admin_url('admin.php?page=' . {{constantPrefix}}_SLUG . ($page ? '&' . $page : ''));
+    }
+}
+
+if (! function_exists('{{functionPrefix}}_get_post')) {
+    /**
+     * Get WordPress post as Eloquent model.
+     */
+    function {{functionPrefix}}_get_post(int $post_id)
+    {
+        return \{{namespace}}\Models\WpPost::find($post_id);
+    }
+}
+
+if (! function_exists('{{functionPrefix}}_get_meta')) {
+    /**
+     * Get post meta value with fallback.
+     */
+    function {{functionPrefix}}_get_meta(int $post_id, string $key, $default = null)
+    {
+        $meta = \{{namespace}}\Models\WpPostMeta::where('post_id', $post_id)
+            ->where('meta_key', $key)
+            ->first();
+            
+        return $meta ? $meta->meta_value : $default;
+    }
+}
+
+if (! function_exists('{{functionPrefix}}_update_meta')) {
+    /**
+     * Update post meta using Eloquent.
+     */
+    function {{functionPrefix}}_update_meta(int $post_id, string $key, $value): bool
+    {
+        return update_post_meta($post_id, $key, $value) !== false;
+    }
+}
+
+if (! function_exists('{{functionPrefix}}_sanitize')) {
+    /**
+     * Sanitize input using WordPress functions.
+     */
+    function {{functionPrefix}}_sanitize($input, string $type = 'text')
+    {
+        switch ($type) {
+            case 'html':
+                return wp_kses_post($input);
+            case 'filename':
+                return sanitize_file_name($input);
+            case 'email':
+                return sanitize_email($input);
+            case 'url':
+                return esc_url_raw($input);
+            default:
+                return sanitize_text_field($input);
+        }
+    }
+}
+
+if (! function_exists('{{functionPrefix}}_escape')) {
+    /**
+     * Escape output for display.
+     */
+    function {{functionPrefix}}_escape($input, string $context = 'html')
+    {
+        switch ($context) {
+            case 'attr':
+                return esc_attr($input);
+            case 'url':
+                return esc_url($input);
+            case 'js':
+                return esc_js($input);
+            default:
+                return esc_html($input);
+        }
+    }
+}
+
+if (! function_exists('{{functionPrefix}}_dd')) {
+    /**
+     * Dump and die with WordPress-friendly output.
+     */
+    function {{functionPrefix}}_dd(...$args)
+    {
+        if (!defined('WP_DEBUG') || !WP_DEBUG) {
+            return;
+        }
+        
+        echo '<pre style="background:#f1f1f1;padding:10px;margin:10px;border:1px solid #ccc;">';
+        foreach ($args as $arg) {
+            var_dump($arg);
+            echo '<hr>';
+        }
+        echo '</pre>';
+        
+        if (function_exists('wp_die')) {
+            wp_die('Debug output');
+        } else {
+            die('Debug output');
+        }
+    }
+}
+
+if (! function_exists('{{functionPrefix}}_plugin_info')) {
+    /**
+     * Get plugin information.
+     */
+    function {{functionPrefix}}_plugin_info(): array
+    {
+        return get_plugin_data({{constantPrefix}}_FILE);
+    }
+}
+
+if (! function_exists('{{functionPrefix}}_db')) {
+    /**
+     * Get plugin database connection.
+     */
+    function {{functionPrefix}}_db()
+    {
+        return {{functionPrefix}}_app('db.connection');
+    }
+}
+
+if (! function_exists('{{functionPrefix}}_wp_query')) {
+    /**
+     * Create WordPress WP_Query with Eloquent integration.
+     */
+    function {{functionPrefix}}_wp_query(array $args = \null)
+    {
+        $args = $args ?? [];
+        
+        // Convertir IDs de Eloquent a formato WordPress si es necesario
+        if (isset($args['post__in']) && is_array($args['post__in'])) {
+            $args['post__in'] = array_map(function($post) {
+                return $post instanceof \{{namespace}}\Models\WpPost ? $post->ID : $post;
+            }, $args['post__in']);
+        }
+        
+        return new \WP_Query($args);
+    }
+}

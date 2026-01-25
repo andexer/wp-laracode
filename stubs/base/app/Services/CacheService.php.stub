@@ -1,0 +1,94 @@
+<?php
+
+namespace {{namespace}}\Services;
+
+/**
+ * CacheService - Manages plugin cache operations.
+ */
+class CacheService
+{
+    /**
+     * Clear plugin cache directory.
+     *
+     * @return void
+     */
+    public function clearPluginCache(): void
+    {
+        $cacheDir = {{constantPrefix}}_PATH . 'storage/framework/cache';
+        $this->clearDirectory($cacheDir);
+    }
+
+    /**
+     * Clear compiled Blade views.
+     *
+     * @return void
+     */
+    public function clearCompiledViews(): void
+    {
+        $viewsDir = {{constantPrefix}}_PATH . 'storage/framework/views';
+        $this->clearDirectory($viewsDir);
+    }
+
+    /**
+     * Clear session files.
+     *
+     * @return void
+     */
+    public function clearSessions(): void
+    {
+        $sessionsDir = {{constantPrefix}}_PATH . 'storage/framework/sessions';
+        $this->clearDirectory($sessionsDir);
+    }
+
+    /**
+     * Truncate log files if they exceed the size limit.
+     *
+     * @param int $maxSizeBytes Maximum size in bytes before truncation
+     * @return void
+     */
+    public function truncateLogs(int $maxSizeBytes = 1048576): void
+    {
+        $logFile = {{constantPrefix}}_PATH . 'storage/logs/plugin.log';
+        if (file_exists($logFile) && filesize($logFile) > $maxSizeBytes) {
+            file_put_contents($logFile, '');
+        }
+    }
+
+    /**
+     * Clear WordPress object cache for this plugin.
+     *
+     * @return void
+     */
+    public function clearWordPressCache(): void
+    {
+        if (function_exists('wp_cache_delete')) {
+            wp_cache_delete('{{slug}}_options', '{{slug}}');
+        }
+
+        if (function_exists('wp_cache_flush')) {
+            wp_cache_flush();
+        }
+    }
+
+    /**
+     * Clear all files in a directory.
+     *
+     * @param string $directory
+     * @return void
+     */
+    protected function clearDirectory(string $directory): void
+    {
+        if (!is_dir($directory)) {
+            return;
+        }
+
+        $files = glob($directory . '/*');
+        if ($files) {
+            foreach ($files as $file) {
+                if (is_file($file)) {
+                    unlink($file);
+                }
+            }
+        }
+    }
+}

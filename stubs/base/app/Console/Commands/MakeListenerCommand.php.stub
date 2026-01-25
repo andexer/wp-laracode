@@ -1,0 +1,101 @@
+<?php
+
+namespace {{namespace}}\Console\Commands;
+
+use Illuminate\Console\Command;
+use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Str;
+
+class MakeListenerCommand extends Command
+{
+    protected $signature = 'make:listener 
+        {name : The name of the listener}
+        {--e|event= : The event class being listened for}';
+
+    protected $description = 'Create a new event listener class';
+
+    protected Filesystem $filesystem;
+
+    public function __construct(Filesystem $filesystem)
+    {
+        parent::__construct();
+        $this->filesystem = $filesystem;
+    }
+
+    public function handle(): int
+    {
+        $name = $this->argument('name');
+
+        $name = str_replace(['/', '\\'], '/', $name);
+        $pathParts = explode('/', $name);
+        $className = array_pop($pathParts);
+        $relativePath = implode('/', $pathParts);
+
+        $namespace = '{{namespace}}\Listeners';
+        if (!empty($pathParts)) {
+            $namespace .= '\\' . implode('\\', $pathParts);
+        }
+
+        $path = {{constantPrefix}}_PATH . 'app/Listeners/' . ($relativePath ? $relativePath . '/' : '') . $className . '.php';
+
+        $this->ensureDirectoryExists(dirname($path));
+
+        if ($this->filesystem->exists($path)) {
+            $this->error("Listener [{$className}] already exists!");
+            return Command::FAILURE;
+        }
+
+        $event = $this->option('event');
+        $this->filesystem->put($path, $this->getStub($namespace, $className, $event));
+
+        $this->info("Listener [{$className}] created successfully.");
+        return Command::SUCCESS;
+    }
+
+    protected function ensureDirectoryExists(string $path): void
+    {
+        if (!$this->filesystem->isDirectory($path)) {
+            $this->filesystem->makeDirectory($path, 0755, true);
+        }
+    }
+
+    protected function getStub(string $namespace, string $className, ?string $event = null): string
+    {
+        $eventClass = $event ? class_basename($event) : 'object';
+        $eventImport = $event ? "use {{namespace}}\Events\\{$eventClass};" : '';
+
+        return <<<PHP
+<?php
+
+namespace {$namespace};
+
+{$eventImport}
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Queue\InteractsWithQueue;
+
+class {$className}
+{
+    /**
+     * Create the event listener.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        //
+    }
+
+    /**
+     * Handle the event.
+     *
+     * @param  {$eventClass}  \$event
+     * @return void
+     */
+    public function handle({$eventClass} \$event)
+    {
+        //
+    }
+}
+PHP;
+    }
+}

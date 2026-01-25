@@ -1,0 +1,66 @@
+<?php
+
+namespace {{namespace}}\Services;
+
+/**
+ * StorageService - Manages plugin storage directories.
+ */
+class StorageService
+{
+    /**
+     * Storage directories to create.
+     *
+     * @var array
+     */
+    protected array $directories = [
+        'storage/logs',
+        'storage/framework/views',
+        'storage/framework/cache',
+        'storage/framework/sessions',
+    ];
+
+    /**
+     * Ensure all required storage directories exist.
+     *
+     * @return void
+     */
+    public function ensureDirectories(): void
+    {
+        foreach ($this->directories as $dir) {
+            $path = {{constantPrefix}}_PATH . $dir;
+            if (!is_dir($path)) {
+                wp_mkdir_p($path);
+            }
+        }
+    }
+
+    /**
+     * Create .htaccess file to protect storage directory.
+     *
+     * @return void
+     */
+    public function createHtaccess(): void
+    {
+        $htaccess = {{constantPrefix}}_PATH . 'storage/.htaccess';
+        if (!file_exists($htaccess)) {
+            file_put_contents($htaccess, "Deny from all\n");
+        }
+    }
+
+    /**
+     * Create index.php files to prevent directory listing.
+     *
+     * @return void
+     */
+    public function createIndexFiles(): void
+    {
+        $content = "<?php\n// Silence is golden.\n";
+
+        foreach ($this->directories as $dir) {
+            $path = {{constantPrefix}}_PATH . $dir . '/index.php';
+            if (!file_exists($path)) {
+                file_put_contents($path, $content);
+            }
+        }
+    }
+}

@@ -266,6 +266,22 @@ If you find this project useful, please consider making a donation to support it
 
 ---
 
+## 🤝 Support & Contributions
+
+I am open to collaborations and support to keep improving **wp-laracode**! You can contribute in several ways:
+
+- **Code Contributions**: Pull requests are always welcome. If you have a fix or a new feature, feel free to submit it!
+- **Direct Collaborators**: If you want to be more involved in the project as a direct collaborator, please get in touch.
+- **Financial Support**: If this tool saves you time or helps your business, consider making a donation. Every bit helps to maintain and improve the framework.
+
+### 💸 Donations
+
+You can support the project financially via PayPal:
+
+👉 **[Donate via PayPal](https://paypal.me/arvelofalcon)**
+
+---
+
 **Ready to transform your WordPress development?** Install wp-laracode today and start building better plugins with Laravel's power and WordPress's flexibility!
 
 ```bash

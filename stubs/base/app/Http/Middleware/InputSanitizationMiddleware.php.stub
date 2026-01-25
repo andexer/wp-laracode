@@ -1,0 +1,94 @@
+<?php
+
+namespace {{namespace}}\Http\Middleware;
+
+class InputSanitizationMiddleware
+{
+    /**
+     * Fields that should be sanitized as HTML (allow safe tags).
+     *
+     * @var array
+     */
+    protected array $htmlFields = ['content', 'description', 'body', 'message'];
+
+    /**
+     * Fields that should be sanitized as email.
+     *
+     * @var array
+     */
+    protected array $emailFields = ['email', 'user_email'];
+
+    /**
+     * Fields that should be sanitized as URL.
+     *
+     * @var array
+     */
+    protected array $urlFields = ['url', 'website', 'link'];
+
+    /**
+     * Handle an incoming request and sanitize input.
+     *
+     * @param \WP_REST_Request $request
+     * @param \Closure $next
+     * @return mixed
+     */
+    public function handle(\WP_REST_Request $request, \Closure $next)
+    {
+        $params = $request->get_params();
+
+        foreach ($params as $key => $value) {
+            if (is_string($value)) {
+                $request->set_param($key, $this->sanitizeValue($key, $value));
+            } elseif (is_array($value)) {
+                $request->set_param($key, $this->sanitizeArray($value));
+            }
+        }
+
+        return $next($request);
+    }
+
+    /**
+     * Sanitize a single value based on field name.
+     *
+     * @param string $key
+     * @param string $value
+     * @return string
+     */
+    protected function sanitizeValue(string $key, string $value): string
+    {
+        $key = strtolower($key);
+
+        if (in_array($key, $this->htmlFields)) {
+            return wp_kses_post($value);
+        }
+
+        if (in_array($key, $this->emailFields)) {
+            return sanitize_email($value);
+        }
+
+        if (in_array($key, $this->urlFields)) {
+            return esc_url_raw($value);
+        }
+
+        return sanitize_text_field($value);
+    }
+
+    /**
+     * Recursively sanitize an array.
+     *
+     * @param array $array
+     * @return array
+     */
+    protected function sanitizeArray(array $array): array
+    {
+        foreach ($array as $key => $value) {
+            if (is_string($value)) {
+                $array[$key] = $this->sanitizeValue($key, $value);
+            } elseif (is_array($value)) {
+                $array[$key] = $this->sanitizeArray($value);
+            }
+        }
+
+        return $array;
+    }
+}

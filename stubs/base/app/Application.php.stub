@@ -91,8 +91,15 @@ class Application extends Container implements ApplicationContract
         static::setInstance($this);
 
         $this->instance('app', $this);
+        $this->instance('config', new ConfigRepository);
         $this->instance(Container::class, $this);
         $this->instance(ApplicationContract::class, $this);
+
+        $this->singleton('events', function ($app) {
+            return new \Illuminate\Events\Dispatcher($app);
+        });
+        $this->alias('events', \Illuminate\Contracts\Events\Dispatcher::class);
+        $this->alias('events', \Illuminate\Events\Dispatcher::class);
     }
 
     /**
@@ -150,37 +157,48 @@ class Application extends Container implements ApplicationContract
         $this->instance('path.lang', $this->langPath());
     }
 
-    public function appPath(string $path = ''): string
+    public function appPath($path = '')
     {
         return $this->basePath('app') . ($path ? DIRECTORY_SEPARATOR . $path : '');
     }
 
-    public function configPath(string $path = ''): string
+    /**
+     * Get the path to the application "app" directory.
+     *
+     * @param  string  $path
+     * @return string
+     */
+    public function path($path = '')
+    {
+        return $this->appPath($path);
+    }
+
+    public function configPath($path = '')
     {
         return $this->basePath('config') . ($path ? DIRECTORY_SEPARATOR . $path : '');
     }
 
-    public function storagePath(string $path = ''): string
+    public function storagePath($path = '')
     {
         return $this->basePath('storage') . ($path ? DIRECTORY_SEPARATOR . $path : '');
     }
 
-    public function resourcePath(string $path = ''): string
+    public function resourcePath($path = '')
     {
         return $this->basePath('resources') . ($path ? DIRECTORY_SEPARATOR . $path : '');
     }
 
-    public function langPath(string $path = ''): string
+    public function langPath($path = '')
     {
         return $this->resourcePath('lang') . ($path ? DIRECTORY_SEPARATOR . $path : '');
     }
 
-    public function databasePath(string $path = ''): string
+    public function databasePath($path = '')
     {
         return $this->basePath('database') . ($path ? DIRECTORY_SEPARATOR . $path : '');
     }
 
-    public function publicPath(string $path = ''): string
+    public function publicPath($path = '')
     {
         return $this->basePath('public') . ($path ? DIRECTORY_SEPARATOR . $path : '');
     }
@@ -188,7 +206,7 @@ class Application extends Container implements ApplicationContract
     /**
      * Register a service provider.
      */
-    public function register($provider, $force = false): ServiceProvider
+    public function register($provider, $force = false)
     {
         if (is_string($provider)) {
             $provider = new $provider($this);
@@ -239,7 +257,7 @@ class Application extends Container implements ApplicationContract
      *
      * @return ServiceProvider[]
      */
-    public function getProviders(): array
+    public function getProviders($provider = null)
     {
         return $this->serviceProviders;
     }
@@ -247,15 +265,15 @@ class Application extends Container implements ApplicationContract
     /**
      * Register core container aliases.
      */
-    protected function registerCoreAliases(): void
+    protected function registerCoreContainerAliases(): void
     {
         $aliases = [
             'app' => [self::class, Container::class],
             'config' => [ConfigRepository::class, \Illuminate\Contracts\Config\Repository::class],
         ];
 
-        foreach ($aliases as $key => $aliases) {
-            foreach ((array) $aliases as $alias) {
+        foreach ($aliases as $key => $group) {
+            foreach ((array) $group as $alias) {
                 $this->alias($key, $alias);
             }
         }
@@ -264,8 +282,146 @@ class Application extends Container implements ApplicationContract
     /**
      * Get the version number of the application.
      */
-    public function version(): string
+    public function version()
     {
         return static::VERSION;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Application Contract Methods
+    |--------------------------------------------------------------------------
+    |
+    | Methods required by Illuminate\Contracts\Foundation\Application.
+    |
+    */
+
+    public function environment(...$environments)
+    {
+        if (count($environments) > 0) {
+            return in_array('production', $environments);
+        }
+        return 'production';
+    }
+
+    public function runningInConsole()
+    {
+        return defined('WP_CLI') || php_sapi_name() === 'cli';
+    }
+
+    public function runningUnitTests()
+    {
+        return defined('PEST') || defined('PHPUNIT_COMPOSER_INSTALL');
+    }
+
+    public function hasDebugModeEnabled()
+    {
+        return defined('WP_DEBUG') && WP_DEBUG;
+    }
+
+    public function isDownForMaintenance()
+    {
+        return false;
+    }
+
+    public function registerConfiguredProviders()
+    {
+        // Handled by PluginServiceProvider
+    }
+
+    public function registerDeferredProvider($provider, $service = null)
+    {
+        return $this->register($provider);
+    }
+
+    public function resolveProvider($provider)
+    {
+        return new $provider($this);
+    }
+
+    public function booting($callback)
+    {
+        // Simple implementation
+        call_user_func($callback, $this);
+    }
+
+    public function booted($callback)
+    {
+        // Simple implementation
+        if ($this->isBooted()) {
+            call_user_func($callback, $this);
+        }
+    }
+
+    public function terminate()
+    {
+        // No-op for now
+    }
+
+    public function getNamespace()
+    {
+        return __NAMESPACE__ . '\\';
+    }
+
+    public function getLocale()
+    {
+        return get_locale();
+    }
+
+    public function setLocale($locale)
+    {
+        // No-op as WP handles locale
+    }
+
+    public function getFallbackLocale()
+    {
+        return 'en_US';
+    }
+
+    public function bootstrapWith(array $bootstrappers)
+    {
+        $this->hasBeenBootstrapped = true;
+
+        foreach ($bootstrappers as $bootstrapper) {
+            $this['events']->dispatch('bootstrapping: '.$bootstrapper, [$this]);
+
+            $this->make($bootstrapper)->bootstrap($this);
+
+            $this['events']->dispatch('bootstrapped: '.$bootstrapper, [$this]);
+        }
+    }
+
+    public function afterLoadingProvider($provider)
+    {
+        // No-op
+    }
+
+    public function hasBeenBootstrapped()
+    {
+        return $this->booted;
+    }
+
+    public function loadDeferredProviders()
+    {
+        // No-op
+    }
+
+    public function setSuccessfulBootstrappers(array $bootstrappers)
+    {
+        // No-op
+    }
+
+    public function maintenanceMode()
+    {
+        return null;
+    }
+    public function terminating($callback)
+    {
+        // No-op
+    }
+
+    public function shouldSkipMiddleware()
+    {
+        return false;
     }
 }
