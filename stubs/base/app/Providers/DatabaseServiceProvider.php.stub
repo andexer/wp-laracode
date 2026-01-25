@@ -10,7 +10,7 @@ class DatabaseServiceProvider extends ServiceProvider
     /**
      * The unique connection name for this plugin to avoid collisions.
      */
-    protected const CONNECTION_NAME = '{{slug}}';
+    protected const CONNECTION_NAME = 'wordpress';
 
     public function register()
     {

@@ -85,8 +85,8 @@ class PluginServiceProvider extends ServiceProvider
         // Register Translation Service Provider
         $this->app->register(\Illuminate\Translation\TranslationServiceProvider::class);
 
-        // Register Database Service Provider
-        $this->app->register(\Illuminate\Database\DatabaseServiceProvider::class);
+        // Register Database Service Provider (Local Capsule Provider)
+        $this->app->register(DatabaseServiceProvider::class);
     }
 
     /**
@@ -114,12 +114,6 @@ class PluginServiceProvider extends ServiceProvider
                 ->setTheme('dark')
                 ->applicationPath({{constantPrefix}}_PATH)
                 ->register();
-        }
-
-        // Boot Eloquent
-        if (class_exists(\Illuminate\Database\Eloquent\Model::class)) {
-            \Illuminate\Database\Eloquent\Model::setConnectionResolver($this->app['db']);
-            \Illuminate\Database\Eloquent\Model::setEventDispatcher($this->app['events']);
         }
     }
 
