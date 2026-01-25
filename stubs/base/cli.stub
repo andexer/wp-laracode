@@ -18,11 +18,14 @@ if (!defined('{{constantPrefix}}_VERSION')) {
 if (!defined('{{constantPrefix}}_BASENAME')) {
 	define('{{constantPrefix}}_BASENAME', basename(__DIR__) . '.php');
 }
+if (!defined('{{constantPrefix}}_FILE')) {
+	define('{{constantPrefix}}_FILE', __DIR__ . '/' . {{constantPrefix}}_BASENAME);
+}
 
 
 // Requirements Check
 if (version_compare(PHP_VERSION, '8.2.0', '<')) {
-	echo "❌ Error: PHP 8.2 or higher is required. Current version: " . PHP_VERSION . PHP_EOL;
+	echo "Error: PHP 8.2 or higher is required. Current version: " . PHP_VERSION . PHP_EOL;
 	exit(1);
 }
 
@@ -182,8 +185,8 @@ if (file_exists(__DIR__ . '/vendor/autoload.php')) {
 	require_once __DIR__ . '/vendor/autoload.php';
 } else {
 	$pluginName = basename(__DIR__);
-	echo "❌ Error: Las dependencias de '{$pluginName}' no están instaladas." . PHP_EOL;
-	echo "💡 Solución: Ejecuta 'cd {$pluginName} && composer install'" . PHP_EOL;
+	echo "Error: Dependencies for '{$pluginName}' are not installed." . PHP_EOL;
+	echo "Solution: Run 'cd {$pluginName} && composer install'" . PHP_EOL;
 	exit(1);
 }
 

@@ -50,15 +50,15 @@ class MakeProviderCommand extends Command
         $this->ensureDirectoryExists(dirname($path));
 
         if ($this->filesystem->exists($path)) {
-            $this->error("❌ Provider [{$className}] already exists!");
+            $this->error("! Provider [{$className}] already exists!");
             return Command::FAILURE;
         }
 
         $this->filesystem->put($path, $this->getStub($namespace, $className));
 
         $relativePath = str_replace({{constantPrefix}}_PATH, '', $path);
-        $this->info("✅ Provider [{$className}] created successfully.");
-        $this->line("📍 Location: <comment>{$relativePath}</comment>");
+        $this->info("* Provider [{$className}] created successfully.");
+        $this->line("=> Location: <comment>{$relativePath}</comment>");
 
         return Command::SUCCESS;
     }

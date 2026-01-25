@@ -13,7 +13,27 @@ class Kernel extends BaseKernel
      * @var array
      */
     protected $commands = [
-        // \{{namespace}}\Console\Commands\YourCommand::class,
+        Commands\MakeControllerCommand::class,
+        Commands\MakeModelCommand::class,
+        Commands\MakeLivewireCommand::class,
+        Commands\LangAddCommand::class,
+        Commands\LangUpdateCommand::class,
+        Commands\AnalyzePluginCommand::class,
+        Commands\MigrateCommand::class,
+        Commands\MigrateRollbackCommand::class,
+        Commands\DbSeedCommand::class,
+        Commands\MakeMigrationCommand::class,
+        Commands\MakeRequestCommand::class,
+        Commands\MakeSeederCommand::class,
+        Commands\MakeMiddlewareCommand::class,
+        Commands\MakeProviderCommand::class,
+        Commands\MakeEventCommand::class,
+        Commands\MakeListenerCommand::class,
+        Commands\MakeJobCommand::class,
+        Commands\MakeRuleCommand::class,
+        Commands\MakePolicyCommand::class,
+        Commands\MakeFactoryCommand::class,
+        Commands\MakeNotificationCommand::class,
     ];
 
     /**

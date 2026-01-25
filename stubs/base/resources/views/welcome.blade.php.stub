@@ -6,7 +6,7 @@
     <h1 class="wp-heading-inline">🚀 Welcome to {{pluginName}}</h1>
 
     <div class="notice notice-success">
-        <p>✅ Plugin integrado exitosamente con WordPress</p>
+        <p>Plugin integrado exitosamente con WordPress</p>
     </div>
 
     <div class="dashboard-widgets-wrap">

@@ -133,15 +133,15 @@ abstract class BaseGeneratorCommand extends Command
         $this->ensureDirectoryExists($path);
 
         if ($this->filesystem->exists($path)) {
-            $this->error(" {$this->type} already exists!");
+            $this->error("Error: {$this->type} already exists!");
             return false;
         }
 
         $this->filesystem->put($path, $content);
         
         $relativePath = str_replace({{constantPrefix}}_PATH, '', $path);
-        $this->info("* {$this->type} created successfully.");
-        $this->line("=> Location: <comment>{$relativePath}</comment>");
+        $this->info("{$this->type} created successfully.");
+        $this->line("Location: <comment>{$relativePath}</comment>");
         
         return true;
     }
