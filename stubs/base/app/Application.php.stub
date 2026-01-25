@@ -272,6 +272,7 @@ class Application extends Container implements ApplicationContract
             'app' => [self::class, Container::class],
             'config' => [ConfigRepository::class, \Illuminate\Contracts\Config\Repository::class],
             'log' => [\Illuminate\Log\LogManager::class, \Psr\Log\LoggerInterface::class],
+            'router' => [\Illuminate\Routing\Router::class, \Illuminate\Contracts\Routing\Registrar::class, \Illuminate\Contracts\Routing\BindingRegistrar::class],
             'files' => \Illuminate\Filesystem\Filesystem::class,
         ];
 
