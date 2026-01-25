@@ -7,6 +7,48 @@ use {{namespace}}\Http\Controllers\WelcomeController;
 
 class WordPressIntegrationProvider extends ServiceProvider
 {
+    /**
+     * Register any application services.
+     *
+     * @return void
+     */
+    public function register()
+    {
+        // Bind the ViewFactory explicitly
+        $this->app->singleton(\Illuminate\Contracts\View\Factory::class, function ($app) {
+            $finder = new \Illuminate\View\FileViewFinder($app['files'], $app['config']['view.paths']);
+            $factory = new \Illuminate\View\Factory($app['view.engine.resolver'], $finder, $app['events']);
+            $factory->setContainer($app);
+            $factory->share('app', $app);
+
+            return $factory;
+        });
+
+        // Bind the BladeCompiler explicitly
+        $this->app->singleton('blade.compiler', function ($app) {
+            return new \Illuminate\View\Compilers\BladeCompiler(
+                $app['files'], $app['config']['view.compiled']
+            );
+        });
+
+        // Register the Blade engine resolver
+        $this->app->singleton('view.engine.resolver', function () {
+            $resolver = new \Illuminate\View\Engines\EngineResolver();
+            $resolver->register('blade', function () {
+                return new \Illuminate\View\Engines\CompilerEngine($this->app['blade.compiler']);
+            });
+            $resolver->register('php', function () {
+                return new \Illuminate\View\Engines\PhpEngine();
+            });
+            return $resolver;
+        });
+
+        // Register the view finder
+        $this->app->singleton('view.finder', function ($app) {
+            return new \Illuminate\View\FileViewFinder($app['files'], $app['config']['view.paths']);
+        });
+    }
+
     public function boot()
     {
         // Create page on activation

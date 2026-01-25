@@ -36,7 +36,6 @@ $app = new Application(
 $app->register(new \Illuminate\Filesystem\FilesystemServiceProvider($app));
 $app->register(new \Illuminate\Log\LogServiceProvider($app));
 $app->register(new \Illuminate\Routing\RoutingServiceProvider($app));
-$app->register(new \Illuminate\View\ViewServiceProvider($app));
 $app->register(new PluginServiceProvider($app));
 
 // Application services
