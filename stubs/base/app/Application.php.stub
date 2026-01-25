@@ -271,6 +271,7 @@ class Application extends Container implements ApplicationContract
         $aliases = [
             'app' => [self::class, Container::class],
             'config' => [ConfigRepository::class, \Illuminate\Contracts\Config\Repository::class],
+            'log' => [\Illuminate\Log\LogManager::class, \Psr\Log\LoggerInterface::class],
         ];
 
         foreach ($aliases as $key => $group) {
