@@ -45,11 +45,13 @@ class LivewireServiceProvider extends ServiceProvider
     {
         $this->app->singleton('view', function ($app) {
             $resolver = new EngineResolver;
-            $viewsPath = $this->app->resourcePath('views');
+            // Use configured view path or default to resources/views
+            $defaultPath = $this->app->resourcePath('views');
+            $viewsPath = $app['config']->get('livewire.view_path', $defaultPath);
 
             // Ensure views directory exists
             if (!is_dir($viewsPath)) {
-                mkdir($viewsPath, 0755, true);
+                @mkdir($viewsPath, 0755, true);
             }
 
             $finder = new FileViewFinder(new Filesystem, [$viewsPath]);
@@ -58,7 +60,7 @@ class LivewireServiceProvider extends ServiceProvider
 
             $compiledPath = $this->app->storagePath() . '/framework/views';
             if (!is_dir($compiledPath)) {
-                mkdir($compiledPath, 0755, true);
+                @mkdir($compiledPath, 0755, true);
             }
 
             $compiler = new BladeCompiler(new Filesystem, $compiledPath);
@@ -68,101 +70,37 @@ class LivewireServiceProvider extends ServiceProvider
         });
     }
 
-    protected function registerSession()
-    {
-        $this->app->singleton('session', function () {
-            $sessionName = '{{slug}}_session_' . get_current_blog_id();
-            return new \Illuminate\Session\Store(
-                $sessionName,
-                new \Illuminate\Session\CookieSessionHandler(new Filesystem, 120)
-            );
-        });
-    }
-
-    protected function registerLivewire()
-    {
-        $this->app->singleton('livewire', fn() => new LivewireManager);
-
-
-    }
-
-    protected function registerBladeDirectives()
-    {
-        $this->app->make('view')->getEngineResolver()->resolve('blade')->getCompiler()->directive('livewire', function ($expression) {
-            return "<?php echo \\Livewire\\Livewire::mount({$expression}); ?>";
-        });
-    }
-
-    protected function registerRestApiEndpoint()
-    {
-        add_action('rest_api_init', function () {
-            // Plugin-specific endpoint to avoid collisions with other wp-laracode plugins
-            register_rest_route('{{slug}}/v1', '/livewire/message/(?P<name>[\w-]+)', [
-                'methods' => 'POST',
-                'callback' => [$this, 'handleLivewireRequest'],
-                'permission_callback' => [$this, 'verifyNonce'],
-            ]);
-        });
-    }
-
     /**
-     * Verify nonce for security.
+     * Verify nonce for security with stricter checks.
      *
      * @param \WP_REST_Request $request
      * @return bool
      */
     public function verifyNonce(\WP_REST_Request $request): bool
     {
-        return Nonce::verifyRestRequest($request, self::NONCE_ACTION);
-    }
+        // Strict: Only accept nonce from Header, not GET/POST params
+        $nonce = $request->get_header('X-WP-Nonce');
 
-    public function handleLivewireRequest(\WP_REST_Request $wpRequest)
-    {
-        // Bridge WP_REST_Request to a Symfony Request
-        $symfonyRequest = Request::createFromGlobals();
-
-        try {
-            // Let Livewire handle the request and get a Symfony Response
-            $livewireResponse = $this->app->make('livewire')->getHttpConnectionHandler()->handle($symfonyRequest);
-
-            // Bridge the Symfony Response back to WordPress
-            $this->sendResponse($livewireResponse);
-        } catch (\Exception $e) {
-            // Log the error
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('[{{slug}}] Livewire error: ' . $e->getMessage());
-            }
-
-            wp_send_json_error([
-                'message' => __('An error occurred processing the request.', '{{slug}}'),
-            ], 500);
+        if (empty($nonce)) {
+            return false;
         }
-    }
 
-    protected function sendResponse(Response $response)
-    {
-        http_response_code($response->getStatusCode());
-        foreach ($response->headers->allPreserveCase() as $name => $values) {
-            foreach ($values as $value) {
-                header($name . ': ' . $value, false);
-            }
-        }
-        echo $response->getContent();
-        exit;
-    }
+        // Verify using WordPress function (returns 1 or 2 if valid)
+        // We do not rely on Nonce helper fallback here for extra security context
+        $result = wp_verify_nonce($nonce, self::NONCE_ACTION);
 
-    protected function enqueueAssets()
-    {
-        add_action('wp_enqueue_scripts', [$this, 'enqueueScripts']);
-        add_action('admin_enqueue_scripts', [$this, 'enqueueScripts']);
+        return (bool) $result;
     }
 
     public function enqueueScripts()
     {
-        // Enqueue Livewire's JavaScript
+        // Enqueue Livewire's JavaScript using configured asset URL
+        $assetUrl = $this->app['config']->get('livewire.asset_url', {{constantPrefix}}_URL . 'public');
+        $assetUrl = rtrim($assetUrl, '/');
+
         wp_enqueue_script(
             '{{slug}}-livewire',
-            {{constantPrefix}}_URL . 'vendor/livewire/livewire/dist/livewire.js',
+            $assetUrl . '/vendor/livewire/livewire/dist/livewire.js',
             [],
             {{constantPrefix}}_VERSION,
             true

@@ -13,19 +13,40 @@ class MakeLivewireCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'make:livewire {name : The name of the Livewire component}';
+    protected $signature = 'make:livewire
+        {name : The name of the Livewire component}
+        {--force : Overwrite existing files}
+        {--inline : Create an inline component without a view file}
+        {--test : Generate a test file for the component}
+        {--stub= : Use a specific stub}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Create a new Livewire component';
+    protected $description = 'Create a new Livewire component with robust validation and options';
 
     /**
      * @var Filesystem
      */
     protected $filesystem;
+
+    /**
+     * Reserved PHP keywords to avoid in class names.
+     */
+    protected array $reservedNames = [
+        'abstract', 'and', 'array', 'as', 'break', 'callable', 'case', 'catch', 'class',
+        'clone', 'const', 'continue', 'declare', 'default', 'die', 'do', 'echo', 'else',
+        'elseif', 'empty', 'enddeclare', 'endfor', 'endforeach', 'endif', 'endswitch',
+        'endwhile', 'eval', 'exit', 'extends', 'final', 'finally', 'fn', 'for', 'foreach',
+        'function', 'global', 'goto', 'if', 'implements', 'include', 'include_once',
+        'instanceof', 'insteadof', 'interface', 'isset', 'list', 'match', 'namespace',
+        'new', 'or', 'print', 'private', 'protected', 'public', 'readonly', 'require',
+        'require_once', 'return', 'static', 'switch', 'throw', 'trait', 'try', 'unset',
+        'use', 'var', 'while', 'xor', 'yield', '__class__', '__dir__', '__file__',
+        '__function__', '__line__', '__method__', '__namespace__', '__trait__'
+    ];
 
     public function __construct(Filesystem $filesystem)
     {
@@ -39,28 +60,69 @@ class MakeLivewireCommand extends Command
     public function handle(): int
     {
         $name = $this->argument('name');
-        $className = Str::studly($name);
-        $viewName = Str::kebab($name);
 
-        // Create the component class
-        $componentPath = $this->getComponentPath($className);
-        $this->ensureDirectoryExists(dirname($componentPath));
-
-        if ($this->filesystem->exists($componentPath)) {
-            $this->error("Livewire component [{$className}] already exists!");
+        // VAL 1: Empty check
+        if (empty($name)) {
+            $this->error('Component name is required.');
             return Command::FAILURE;
         }
 
-        $this->filesystem->put($componentPath, $this->getComponentStub($className));
-        $this->info("Livewire component [{$className}] created successfully.");
+        // VAL 2: Regex check (Allowing alphanumeric, dashes, underscores, and directory separators)
+        if (!preg_match('/^[a-zA-Z][a-zA-Z0-9-\\/_\\\\]*$/', $name)) {
+            $this->error('Invalid component name. Use only letters, numbers, hyphens, underscores, and slashes.');
+            return Command::FAILURE;
+        }
 
-        // Create the view
-        $viewPath = $this->getViewPath($viewName);
-        $this->ensureDirectoryExists(dirname($viewPath));
+        $className = Str::studly($name);
+        // Normalize class name for nested directories
+        $className = str_replace(['/', '\\'], '\\', $className);
 
-        if (!$this->filesystem->exists($viewPath)) {
-            $this->filesystem->put($viewPath, $this->getViewStub($className));
-            $this->info("Livewire view [livewire.{$viewName}] created successfully.");
+        // VAL 3: Reserved keywords check on the final class name (basename)
+        $baseClassName = class_basename($className);
+        if (in_array(strtolower($baseClassName), $this->reservedNames)) {
+            $this->error("The component name '{$baseClassName}' is a reserved PHP keyword.");
+            return Command::FAILURE;
+        }
+
+        $viewName = Str::kebab($name);
+        $isInline = $this->option('inline');
+        $force = $this->option('force');
+
+        // Create the component class
+        $componentPath = $this->getComponentPath($className);
+
+        if ($this->filesystem->exists($componentPath) && !$force) {
+            $this->error("Livewire component [{$className}] already exists! Use --force to overwrite.");
+            return Command::FAILURE;
+        }
+
+        $this->ensureDirectoryExists(dirname($componentPath));
+
+        try {
+            $stub = $isInline ? $this->getInlineComponentStub($className) : $this->getComponentStub($className, $viewName);
+            $this->filesystem->put($componentPath, $stub);
+            $this->info("Livewire component [{$className}] created successfully.");
+        } catch (\Exception $e) {
+            $this->error("Failed to create component: " . $e->getMessage());
+            return Command::FAILURE;
+        }
+
+        // Create the view (only if not inline)
+        if (!$isInline) {
+            $viewPath = $this->getViewPath($viewName);
+
+            if ($this->filesystem->exists($viewPath) && !$force) {
+                $this->warn("View [livewire.{$viewName}] already exists. Skipping.");
+            } else {
+                $this->ensureDirectoryExists(dirname($viewPath));
+                $this->filesystem->put($viewPath, $this->getViewStub($className));
+                $this->info("Livewire view [livewire.{$viewName}] created successfully.");
+            }
+        }
+
+        // Generate test if requested
+        if ($this->option('test')) {
+            $this->createTest($className);
         }
 
         return Command::SUCCESS;
@@ -68,6 +130,8 @@ class MakeLivewireCommand extends Command
 
     protected function getComponentPath(string $className): string
     {
+        // Handle namespaced classes (App\Http\Livewire\Sub\Component)
+        $className = str_replace('\\', '/', $className);
         return {{constantPrefix}}_PATH . 'app/Http/Livewire/' . $className . '.php';
     }
 
@@ -83,12 +147,21 @@ class MakeLivewireCommand extends Command
         }
     }
 
-    protected function getComponentStub(string $className): string
+    protected function getComponentStub(string $className, string $viewName): string
     {
+        $namespace = '{{namespace}}\Http\Livewire';
+
+        // Handle subdirectory namespace
+        if (str_contains($className, '\\')) {
+            $parts = explode('\\', $className);
+            $className = array_pop($parts);
+            $namespace .= '\\' . implode('\\', $parts);
+        }
+
         return <<<PHP
 <?php
 
-namespace {{namespace}}\Http\Livewire;
+namespace {$namespace};
 
 use Livewire\Component;
 
@@ -96,7 +169,39 @@ class {$className} extends Component
 {
     public function render()
     {
-        return view('livewire.' . \Illuminate\Support\Str::kebab('{$className}'));
+        return view('livewire.{$viewName}');
+    }
+}
+PHP;
+    }
+
+    protected function getInlineComponentStub(string $className): string
+    {
+        $namespace = '{{namespace}}\Http\Livewire';
+
+        if (str_contains($className, '\\')) {
+            $parts = explode('\\', $className);
+            $className = array_pop($parts);
+            $namespace .= '\\' . implode('\\', $parts);
+        }
+
+        return <<<PHP
+<?php
+
+namespace {$namespace};
+
+use Livewire\Component;
+
+class {$className} extends Component
+{
+    public function render()
+    {
+        return <<<'blade'
+            <div>
+                {{-- {$className} Inline Component --}}
+                <h2>{$className}</h2>
+            </div>
+        blade;
     }
 }
 PHP;
@@ -111,5 +216,37 @@ PHP;
     <p>Your Livewire component is ready!</p>
 </div>
 BLADE;
+    }
+
+    protected function createTest(string $className): void
+    {
+        // Simple implementation for test generation
+        $testName = class_basename($className) . 'Test';
+        $path = {{constantPrefix}}_PATH . 'tests/Feature/Livewire/' . $testName . '.php';
+
+        $this->ensureDirectoryExists(dirname($path));
+
+        $content = <<<PHP
+<?php
+
+namespace Tests\Feature\Livewire;
+
+use Livewire\Livewire;
+use {{namespace}}\Http\Livewire\\{$className};
+use Tests\TestCase;
+
+class {$testName} extends TestCase
+{
+    /** @test */
+    public function the_component_can_render()
+    {
+        Livewire::test({$className}::class)
+            ->assertStatus(200);
+    }
+}
+PHP;
+
+        $this->filesystem->put($path, $content);
+        $this->info("Test [{$testName}] created successfully.");
     }
 }
