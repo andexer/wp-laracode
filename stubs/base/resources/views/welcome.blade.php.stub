@@ -1,0 +1,61 @@
+{{-- resources/views/welcome.blade.php --}}
+@extends('layouts.app')
+
+@section('content')
+<div class="wrap">
+    <h1 class="wp-heading-inline">🚀 Bienvenido a tu Plugin Laravel + WordPress</h1>
+
+    <div class="notice notice-success">
+        <p>✅ Plugin integrado exitosamente con WordPress</p>
+    </div>
+
+    <div class="dashboard-widgets-wrap">
+        <div class="metabox-holder">
+            <div class="postbox-container" style="width: 50%;">
+                <div class="postbox">
+                    <h2 class="hndle">📊 Estadísticas del Sitio</h2>
+                    <div class="inside">
+                        <ul>
+                            <li><strong>Posts:</strong> {{ $stats['total_posts'] }}</li>
+                            <li><strong>Páginas:</strong> {{ $stats['total_pages'] }}</li>
+                            <li><strong>Usuarios:</strong> {{ $stats['total_users'] }}</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="postbox">
+                    <h2 class="hndle">📝 Posts Recientes</h2>
+                    <div class="inside">
+                        @forelse($posts as $post)
+                            <div class="item">
+                                <h4><a href="{{ get_edit_post_link($post->ID) }}">{{ $post->post_title }}</a></h4>
+                                <p>Por {{ $post->author->display_name }} - {{ $post->post_date->format('d/m/Y') }}</p>
+                            </div>
+                        @empty
+                            <p>No hay posts publicados.</p>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+
+            <div class="postbox-container" style="width: 50%;">
+                <div class="postbox">
+                    <h2 class="hndle">🔧 Acciones Rápidas</h2>
+                    <div class="inside">
+                        <p>
+                            <a href="{{ admin_url('admin.php?page=plugin-settings') }}" class="button button-primary">
+                                Configuración del Plugin
+                            </a>
+                        </p>
+                        <p>
+                            <a href="{{ admin_url('edit.php?post_type=page') }}" class="button">
+                                Ver Páginas
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection

@@ -1,0 +1,43 @@
+<?php
+
+namespace {{namespace}}\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class WpPost extends Model
+{
+    protected $table = 'posts';
+    protected $primaryKey = 'ID';
+    public $timestamps = false;
+
+    protected $fillable = [
+        'post_title', 'post_content', 'post_status', 'post_type', 'post_author', 'post_name'
+    ];
+
+    protected $casts = [
+        'post_date' => 'datetime',
+        'post_modified' => 'datetime',
+    ];
+
+    public function meta()
+    {
+        return $this->hasMany(WpPostMeta::class, 'post_id', 'ID');
+    }
+
+    public function author()
+    {
+        return $this->belongsTo(WpUser::class, 'post_author', 'ID');
+    }
+
+    // Scope for published posts
+    public function scopePublished($query)
+    {
+        return $query->where('post_status', 'publish');
+    }
+
+    // Scope for specific post type
+    public function scopeType($query, $type)
+    {
+        return $query->where('post_type', $type);
+    }
+}

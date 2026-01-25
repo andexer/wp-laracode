@@ -1,0 +1,64 @@
+<?php
+
+namespace {{namespace}}\Http\Controllers;
+
+use {{namespace}}\Models\WpPost;
+use {{namespace}}\Models\WpUser;
+use Illuminate\Http\Request;
+
+class WelcomeController
+{
+    public function index()
+    {
+        // Get recent posts with relations
+        $posts = WpPost::published()
+            ->type('post')
+            ->with(['author', 'meta'])
+            ->orderBy('post_date', 'desc')
+            ->limit(10)
+            ->get();
+
+        // Basic stats
+        $stats = [
+            'total_posts' => WpPost::type('post')->count(),
+            'total_pages' => WpPost::type('page')->count(),
+            'total_users' => WpUser::count(),
+        ];
+
+        return view('welcome', compact('posts', 'stats'));
+    }
+
+    public function createWelcomePage()
+    {
+        // Check if page exists
+        $existing = get_page_by_path('plugin-welcome');
+
+        if (!$existing) {
+            // Create page in WordPress
+            $page_id = wp_insert_post([
+                'post_title' => 'Bienvenido al Plugin',
+                'post_content' => $this->getPageContent(),
+                'post_status' => 'publish',
+                'post_type' => 'page',
+                'post_name' => 'plugin-welcome',
+                'post_author' => get_current_user_id(),
+            ]);
+
+            if ($page_id && !is_wp_error($page_id)) {
+                // Save plugin meta match
+                update_post_meta($page_id, '_plugin_version', '1.0.0');
+                update_post_meta($page_id, '_plugin_generated', 'true');
+
+                return $page_id;
+            }
+        }
+
+        return false;
+    }
+
+    private function getPageContent()
+    {
+        return '<!-- Content rendered via shortcode -->
+                [plugin_welcome_dashboard]';
+    }
+}

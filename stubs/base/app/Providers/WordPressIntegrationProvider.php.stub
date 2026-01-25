@@ -1,0 +1,45 @@
+<?php
+
+namespace {{namespace}}\Providers;
+
+use Illuminate\Support\ServiceProvider;
+use {{namespace}}\Http\Controllers\WelcomeController;
+
+class WordPressIntegrationProvider extends ServiceProvider
+{
+    public function boot()
+    {
+        // Create page on activation
+        register_activation_hook({{constantPrefix}}_FILE, function() {
+            // Need to make sure app is booted or at least container is available
+            $controller = app(WelcomeController::class);
+            $controller->createWelcomePage();
+        });
+
+        // Register shortcode for dashboard
+        add_shortcode('plugin_welcome_dashboard', function() {
+            // Output buffering to capture view content
+            ob_start();
+            echo app(WelcomeController::class)->index();
+            return ob_get_clean();
+        });
+
+        // Add Admin Menu
+        add_action('admin_menu', function() {
+            add_menu_page(
+                'Plugin Dashboard',
+                'Mi Plugin',
+                'manage_options',
+                'plugin-dashboard',
+                function() {
+                    echo '<div class="wrap">';
+                    echo '<h1>Mi Plugin Dashboard</h1>';
+                    echo do_shortcode('[plugin_welcome_dashboard]');
+                    echo '</div>';
+                },
+                'dashicons-dashboard',
+                6
+            );
+        });
+    }
+}

@@ -1,0 +1,37 @@
+<?php
+
+namespace {{namespace}}\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class WpUser extends Model
+{
+    protected $table = 'users';
+    protected $primaryKey = 'ID';
+    public $timestamps = false;
+
+    protected $fillable = [
+        'user_login', 'user_email', 'user_nicename', 'display_name', 'user_status'
+    ];
+
+    protected $hidden = [
+        'user_pass', 'user_activation_key'
+    ];
+
+    public function meta()
+    {
+        return $this->hasMany(WpUserMeta::class, 'user_id', 'ID');
+    }
+
+    public function posts()
+    {
+        return $this->hasMany(WpPost::class, 'post_author', 'ID');
+    }
+
+    // Get specific meta value
+    public function getMeta($key, $default = null)
+    {
+        $meta = $this->meta()->where('meta_key', $key)->first();
+        return $meta ? $meta->meta_value : $default;
+    }
+}

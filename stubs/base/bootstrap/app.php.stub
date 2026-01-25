@@ -42,7 +42,11 @@ $app->register(new AppServiceProvider($app));
 $app->register(new DatabaseServiceProvider($app));
 
 // Livewire integration (views, sessions, REST endpoints)
+// Livewire integration (views, sessions, REST endpoints)
 $app->register(new LivewireServiceProvider($app));
+
+// WordPress Integration (Dashboard, Menus, Shortcodes)
+$app->register(new {{namespace}}\Providers\WordPressIntegrationProvider($app));
 
 /*
 |--------------------------------------------------------------------------
