@@ -39,14 +39,14 @@ class MakeProviderCommand extends Command
         $className = array_pop($pathParts);
         $relativePath = implode('/', $pathParts);
 
-        $namespace = '{{namespace}}\Providers';
+        $namespace = '{{namespace}}\Services\Providers';
         if (!empty($pathParts)) {
             $namespace .= '\\' . implode('\\', $pathParts);
         }
 
         $className = Str::studly($className);
 
-        $path = {{constantPrefix}}_PATH . 'app/Providers/' . ($relativePath ? $relativePath . '/' : '') . $className . '.php';
+        $path = {{constantPrefix}}_PATH . 'app/Services/Providers/' . ($relativePath ? $relativePath . '/' : '') . $className . '.php';
         $this->ensureDirectoryExists(dirname($path));
 
         if ($this->filesystem->exists($path)) {

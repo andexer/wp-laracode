@@ -1,6 +1,6 @@
 <?php
 
-namespace {{namespace}}\Providers;
+namespace {{namespace}}\Services\Providers;
 
 use Illuminate\Support\ServiceProvider;
 
@@ -18,10 +18,8 @@ class PluginServiceProvider extends ServiceProvider
      */
     protected array $configFiles = [
         'app',
-        'cache',
         'database',
-        'logging',
-        'view',
+        'plugin',
     ];
 
     /**
@@ -32,10 +30,8 @@ class PluginServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->loadConfigurationFiles();
-        $this->registerCoreBindings();
+        $this->registerConfiguredProviders();
     }
-
-
 
     /**
      * Load all configuration files from config/ directory.
@@ -44,7 +40,7 @@ class PluginServiceProvider extends ServiceProvider
      */
     protected function loadConfigurationFiles(): void
     {
-        $configPath = {{constantPrefix}}_PATH . 'bootstrap/core';
+        $configPath = {{constantPrefix}}_PATH . 'config';
 
         foreach ($this->configFiles as $file) {
             $filePath = $configPath . DIRECTORY_SEPARATOR . $file . '.php';
@@ -55,25 +51,31 @@ class PluginServiceProvider extends ServiceProvider
         }
 
         // Also load any additional config files found in the directory
-        $configFiles = glob($configPath . '/*.php');
-        foreach ($configFiles as $configFile) {
-            $key = basename($configFile, '.php');
-            if (!in_array($key, $this->configFiles)) {
-                $this->app->make('config')->set($key, require $configFile);
+        if (is_dir($configPath)) {
+            $configFiles = glob($configPath . '/*.php');
+            foreach ($configFiles as $configFile) {
+                $key = basename($configFile, '.php');
+                if (!in_array($key, $this->configFiles)) {
+                    $this->app->make('config')->set($key, require $configFile);
+                }
             }
         }
     }
 
     /**
-     * Register core container bindings.
-     *
-     * @return void
+     * Register the service providers listed in the config.
      */
-    protected function registerCoreBindings(): void
+    protected function registerConfiguredProviders(): void
     {
+        $providers = $this->app['config']['app.providers'] ?? [];
+
+        foreach ($providers as $provider) {
+            $this->app->register($provider);
+        }
+
         // Bind path constants
         $this->app->instance('path.base', {{constantPrefix}}_PATH);
-        $this->app->instance('path.config', {{constantPrefix}}_PATH . 'bootstrap/core');
+        $this->app->instance('path.config', {{constantPrefix}}_PATH . 'config');
         $this->app->instance('path.storage', {{constantPrefix}}_PATH . 'storage');
         $this->app->instance('path.resources', {{constantPrefix}}_PATH . 'resources');
         $this->app->instance('path.public', {{constantPrefix}}_PATH . 'public');
@@ -81,18 +83,6 @@ class PluginServiceProvider extends ServiceProvider
         // Bind URL constants
         $this->app->instance('url.base', {{constantPrefix}}_URL);
         $this->app->instance('url.assets', {{constantPrefix}}_URL . 'public/');
-
-        // Register Translation Service Provider
-        $this->app->register(\Illuminate\Translation\TranslationServiceProvider::class);
-
-        // Register Database Service Provider (Local Capsule Provider)
-        $this->app->register(DatabaseServiceProvider::class);
-
-        // Register Filesystem Service Provider (Required for Views & Logs)
-        $this->app->register(\Illuminate\Filesystem\FilesystemServiceProvider::class);
-
-        // Register View Service Provider
-        $this->app->register(\Illuminate\View\ViewServiceProvider::class);
     }
 
     /**
@@ -112,15 +102,6 @@ class PluginServiceProvider extends ServiceProvider
         if (file_exists({{constantPrefix}}_PATH . 'routes/web.php')) {
             $this->loadRoutesFrom({{constantPrefix}}_PATH . 'routes/web.php');
         }
-
-        // Register prettier error page (Ignition) in debug mode
-        // Ignition provides dark mode and markdown copy button by default
-        // if (defined('WP_DEBUG') && WP_DEBUG && class_exists(\Spatie\Ignition\Ignition::class)) {
-        //     \Spatie\Ignition\Ignition::make()
-        //         ->setTheme('dark')
-        //         ->applicationPath({{constantPrefix}}_PATH)
-        //         ->register();
-        // }
     }
 
     /**
@@ -139,7 +120,6 @@ class PluginServiceProvider extends ServiceProvider
         $helperFiles = glob($helpersPath . '/*.php');
 
         foreach ($helperFiles as $file) {
-            // Skip class files (those with namespace declarations)
             $content = file_get_contents($file);
             if (strpos($content, 'namespace ') === false || strpos($content, 'class ') !== false) {
                 continue;

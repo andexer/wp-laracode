@@ -18,7 +18,7 @@ class MakeModelCommand extends BaseGeneratorCommand
     protected $description = 'Create a new Eloquent model';
 
     protected string $type = 'Model';
-    protected string $baseDirectory = 'app/Models';
+    protected string $baseDirectory = 'app/Services/Models';
 
     public function handle(): int
     {
@@ -65,7 +65,7 @@ class MakeModelCommand extends BaseGeneratorCommand
 
     protected function getFilePath(string $relativePath, string $className, string $subDirectory = ''): string
     {
-        $basePath = {{constantPrefix}}_PATH . 'app/Models';
+        $basePath = {{constantPrefix}}_PATH . 'app/Services/Models';
 
         if ($relativePath) {
             $basePath .= '/' . $relativePath;

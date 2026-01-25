@@ -4,7 +4,7 @@ namespace {{namespace}}\Hooks;
 
 use {{namespace}}\Services\StorageService;
 use {{namespace}}\Services\CacheService;
-use {{namespace}}\Http\Controllers\WelcomeController;
+use {{namespace}}\Components\Controllers\WelcomeController;
 
 /**
  * ActivationHook - Handle plugin activation tasks.

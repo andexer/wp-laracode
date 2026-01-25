@@ -176,7 +176,7 @@ class Application extends Container implements ApplicationContract
 
     public function configPath($path = '')
     {
-        return $this->bootstrapPath('core') . ($path ? DIRECTORY_SEPARATOR . $path : '');
+        return $this->basePath('config') . ($path ? DIRECTORY_SEPARATOR . $path : '');
     }
 
     public function storagePath($path = '')

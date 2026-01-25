@@ -30,14 +30,14 @@ class MakeMiddlewareCommand extends Command
         $className = array_pop($pathParts);
         $relativePath = implode('/', $pathParts);
 
-        $namespace = '{{namespace}}\Http\Middleware';
+        $namespace = '{{namespace}}\Components\Middleware';
         if (!empty($pathParts)) {
             $namespace .= '\\' . implode('\\', $pathParts);
         }
 
         $className = Str::studly($className);
 
-        $path = {{constantPrefix}}_PATH . 'app/Http/Middleware/' . ($relativePath ? $relativePath . '/' : '') . $className . '.php';
+        $path = {{constantPrefix}}_PATH . 'app/Components/Middleware/' . ($relativePath ? $relativePath . '/' : '') . $className . '.php';
         $this->ensureDirectoryExists(dirname($path));
 
         if ($this->filesystem->exists($path)) {

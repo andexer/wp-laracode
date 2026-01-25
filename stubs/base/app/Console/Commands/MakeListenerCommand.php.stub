@@ -40,12 +40,12 @@ class MakeListenerCommand extends Command
         $className = array_pop($pathParts);
         $relativePath = implode('/', $pathParts);
 
-        $namespace = '{{namespace}}\Listeners';
+        $namespace = '{{namespace}}\Services\Listeners';
         if (!empty($pathParts)) {
             $namespace .= '\\' . implode('\\', $pathParts);
         }
 
-        $path = {{constantPrefix}}_PATH . 'app/Listeners/' . ($relativePath ? $relativePath . '/' : '') . $className . '.php';
+        $path = {{constantPrefix}}_PATH . 'app/Services/Listeners/' . ($relativePath ? $relativePath . '/' : '') . $className . '.php';
 
         $this->ensureDirectoryExists(dirname($path));
 
@@ -71,7 +71,7 @@ class MakeListenerCommand extends Command
     protected function getStub(string $namespace, string $className, ?string $event = null): string
     {
         $eventClass = $event ? class_basename($event) : 'object';
-        $eventImport = $event ? "use {{namespace}}\Events\\{$eventClass};" : '';
+        $eventImport = $event ? "use {{namespace}}\Services\Events\\{$eventClass};" : '';
 
         return <<<PHP
 <?php

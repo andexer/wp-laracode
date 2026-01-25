@@ -1,9 +1,9 @@
 <?php
 
-namespace {{namespace}}\Http\Controllers;
+namespace {{namespace}}\Components\Controllers;
 
-use {{namespace}}\Models\WpPost;
-use {{namespace}}\Models\WpUser;
+use {{namespace}}\Services\Models\WpPost;
+use {{namespace}}\Services\Models\WpUser;
 use Illuminate\Http\Request;
 
 class WelcomeController

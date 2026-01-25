@@ -1,0 +1,98 @@
+<?php
+
+return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Application Name & Namespace
+    |--------------------------------------------------------------------------
+    */
+
+    'name' => '{{pluginName}}',
+    'namespace' => '{{namespace}}',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Application Locale Configuration
+    |--------------------------------------------------------------------------
+    */
+
+    'locale' => 'en',
+    'fallback_locale' => 'en',
+
+    /*
+    |--------------------------------------------------------------------------
+    | View Configuration
+    |--------------------------------------------------------------------------
+    */
+
+    'view' => [
+        'paths' => [
+            {{constantPrefix}}_PATH . 'resources/views',
+        ],
+        'compiled' => {{constantPrefix}}_PATH . 'storage/framework/views',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Logging Configuration
+    |--------------------------------------------------------------------------
+    */
+
+    'logging' => [
+        'default' => 'stack',
+        'channels' => [
+            'stack' => [
+                'driver' => 'stack',
+                'channels' => ['single'],
+                'ignore_exceptions' => false,
+            ],
+            'single' => [
+                'driver' => 'single',
+                'path' => {{constantPrefix}}_PATH . 'storage/logs/plugin.log',
+                'level' => 'debug',
+            ],
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cache Configuration
+    |--------------------------------------------------------------------------
+    */
+
+    'cache' => [
+        'default' => 'file',
+        'stores' => [
+            'file' => [
+                'driver' => 'file',
+                'path' => {{constantPrefix}}_PATH . 'storage/framework/cache/data',
+            ],
+            'array' => [
+                'driver' => 'array',
+                'serialize' => false,
+            ],
+        ],
+        'prefix' => '{{slug}}_cache_',
+    ],
+    
+    /*
+    |--------------------------------------------------------------------------
+    | Autoloaded Service Providers
+    |--------------------------------------------------------------------------
+    */
+
+    'providers' => [
+        Illuminate\Filesystem\FilesystemServiceProvider::class,
+        Illuminate\View\ViewServiceProvider::class,
+        Illuminate\Translation\TranslationServiceProvider::class,
+        Illuminate\Validation\ValidationServiceProvider::class,
+        Illuminate\Pipeline\PipelineServiceProvider::class,
+        {{namespace}}\Services\Providers\PluginServiceProvider::class,
+        {{namespace}}\Services\Providers\AppServiceProvider::class,
+        {{namespace}}\Services\Providers\DatabaseServiceProvider::class,
+        {{namespace}}\Services\Providers\LivewireServiceProvider::class,
+        {{namespace}}\Services\Providers\WordPressIntegrationProvider::class,
+    ],
+
+];

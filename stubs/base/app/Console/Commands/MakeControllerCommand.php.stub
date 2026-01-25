@@ -45,19 +45,19 @@ class MakeControllerCommand extends Command
         $relativePath = implode('/', $pathParts);
 
         // Determine Namespace
-        $namespace = '{{namespace}}\Http\Controllers';
+        $namespace = '{{namespace}}\Components\Controllers';
         if (!empty($pathParts)) {
             $namespace .= '\\' . implode('\\', $pathParts);
         }
 
         // Determine destination path
-        $path = {{constantPrefix}}_PATH . 'app/Http/Controllers/' . ($relativePath ? $relativePath . '/' : '') . $className . '.php';
+        $path = {{constantPrefix}}_PATH . 'app/Components/Controllers/' . ($relativePath ? $relativePath . '/' : '') . $className . '.php';
 
         // Normalize class name for studly case (just the class name part)
         $className = Str::studly($className);
 
         // Final Path update with studly filename
-        $path = {{constantPrefix}}_PATH . 'app/Http/Controllers/' . ($relativePath ? $relativePath . '/' : '') . $className . '.php';
+        $path = {{constantPrefix}}_PATH . 'app/Components/Controllers/' . ($relativePath ? $relativePath . '/' : '') . $className . '.php';
 
         $this->ensureDirectoryExists(dirname($path));
 

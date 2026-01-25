@@ -143,7 +143,7 @@ class MakeLivewireCommand extends Command
     {
         // Handle namespaced classes (App\Http\Livewire\Sub\Component)
         $className = str_replace('\\', '/', $className);
-        return {{constantPrefix}}_PATH . 'app/Http/Livewire/' . $className . '.php';
+        return {{constantPrefix}}_PATH . 'app/Components/Livewire/' . $className . '.php';
     }
 
     protected function getViewPath(string $viewName): string
@@ -160,7 +160,7 @@ class MakeLivewireCommand extends Command
 
     protected function getComponentStub(string $className, string $viewName): string
     {
-        $namespace = '{{namespace}}\Http\Livewire';
+        $namespace = '{{namespace}}\Components\Livewire';
 
         // Handle subdirectory namespace
         if (str_contains($className, '\\')) {
@@ -188,7 +188,7 @@ PHP;
 
     protected function getInlineComponentStub(string $className): string
     {
-        $namespace = '{{namespace}}\Http\Livewire';
+        $namespace = '{{namespace}}\Components\Livewire';
 
         if (str_contains($className, '\\')) {
             $parts = explode('\\', $className);
@@ -243,7 +243,7 @@ BLADE;
 namespace Tests\Feature\Livewire;
 
 use Livewire\Livewire;
-use {{namespace}}\Http\Livewire\\{$className};
+use {{namespace}}\Components\Livewire\\{$className};
 use Tests\TestCase;
 
 class {$testName} extends TestCase
