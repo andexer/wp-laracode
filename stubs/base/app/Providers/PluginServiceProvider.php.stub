@@ -46,7 +46,21 @@ class PluginServiceProvider extends ServiceProvider
             $filePath = $configPath . DIRECTORY_SEPARATOR . $file . '.php';
 
             if (file_exists($filePath)) {
-                $this->app->make('config')->set($file, require $filePath);
+                $config = require $filePath;
+
+                if ($file === 'app') {
+                    // Extract root level keys that should be top-level config for Laravel compatibility
+                    $topLevelKeys = ['view', 'logging', 'cache'];
+                    foreach ($topLevelKeys as $key) {
+                        if (isset($config[$key])) {
+                            $this->app->make('config')->set($key, $config[$key]);
+                            unset($config[$key]);
+                        }
+                    }
+                    $this->app->make('config')->set('app', $config);
+                } else {
+                    $this->app->make('config')->set($file, $config);
+                }
             }
         }
 

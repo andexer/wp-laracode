@@ -369,7 +369,7 @@ class Application extends Container implements ApplicationContract
 
     public function getLocale()
     {
-        return get_locale();
+        return function_exists('get_locale') ? get_locale() : 'en';
     }
 
     public function setLocale($locale)
@@ -379,7 +379,7 @@ class Application extends Container implements ApplicationContract
 
     public function getFallbackLocale()
     {
-        return 'en_US';
+        return 'en';
     }
 
     public function bootstrapWith(array $bootstrappers)

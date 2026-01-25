@@ -115,7 +115,10 @@ class SetupCommand extends Command
 		// 5. Replace placeholders in all files in root options
 		$this->replacePlaceholders($placeholders, $destinationPath);
 
-		// 6. Delete Stubs Directory (Cleanup)
+		// 6. Create storage directories for isolation
+		$this->createStorageDirectories($destinationPath);
+
+		// 7. Delete Stubs Directory (Cleanup)
 		$this->filesystem->deleteDirectory(base_path('stubs'));
 
 		// 7. Remove the original binary if it's different from the new one
@@ -222,5 +225,29 @@ class SetupCommand extends Command
 		$process->run(function ($type, $buffer) {
 			$this->output->write($buffer);
 		});
+	}
+
+	protected function createStorageDirectories(string $destinationPath): void
+	{
+		$storagePath = $destinationPath . '/storage';
+
+		$directories = [
+			$storagePath . '/logs',
+			$storagePath . '/framework/views',
+			$storagePath . '/framework/cache',
+			$storagePath . '/framework/sessions',
+		];
+
+		foreach ($directories as $dir) {
+			if (!$this->filesystem->isDirectory($dir)) {
+				$this->filesystem->makeDirectory($dir, 0755, true);
+			}
+
+			// Create .gitkeep
+			$gitkeep = $dir . '/.gitkeep';
+			if (!$this->filesystem->exists($gitkeep)) {
+				$this->filesystem->put($gitkeep, '');
+			}
+		}
 	}
 }
