@@ -27,13 +27,13 @@ return [
     'channels' => [
         'single' => [
             'driver' => 'single',
-            'path' => {{constantPrefix}}_PATH . 'storage/logs/plugin.log',
+            'path' => {{constantPrefix}}_PATH . 'storage/logs/{{slug}}.log',
             'level' => defined('WP_DEBUG') && WP_DEBUG ? 'debug' : 'error',
         ],
 
         'daily' => [
             'driver' => 'daily',
-            'path' => {{constantPrefix}}_PATH . 'storage/logs/plugin.log',
+            'path' => {{constantPrefix}}_PATH . 'storage/logs/{{slug}}.log',
             'level' => defined('WP_DEBUG') && WP_DEBUG ? 'debug' : 'error',
             'days' => 14,
         ],

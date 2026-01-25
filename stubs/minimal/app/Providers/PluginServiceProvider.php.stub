@@ -39,7 +39,7 @@ class PluginServiceProvider extends ServiceProvider
      */
     protected function loadConfigurationFiles(): void
     {
-        $configPath = {{constantPrefix}}_PATH . 'config';
+        $configPath = {{constantPrefix}}_PATH . 'bootstrap/core';
 
         foreach ($this->configFiles as $file) {
             $filePath = $configPath . DIRECTORY_SEPARATOR . $file . '.php';
@@ -68,7 +68,7 @@ class PluginServiceProvider extends ServiceProvider
     {
         // Bind path constants
         $this->app->instance('path.base', {{constantPrefix}}_PATH);
-        $this->app->instance('path.config', {{constantPrefix}}_PATH . 'config');
+        $this->app->instance('path.config', {{constantPrefix}}_PATH . 'bootstrap/core');
         $this->app->instance('path.storage', {{constantPrefix}}_PATH . 'storage');
         $this->app->instance('path.resources', {{constantPrefix}}_PATH . 'resources');
         $this->app->instance('path.public', {{constantPrefix}}_PATH . 'public');
