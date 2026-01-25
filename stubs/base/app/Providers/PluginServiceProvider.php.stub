@@ -21,7 +21,7 @@ class PluginServiceProvider extends ServiceProvider
         'cache',
         'database',
         'logging',
-        'views',
+        'view',
     ];
 
     /**
@@ -87,6 +87,12 @@ class PluginServiceProvider extends ServiceProvider
 
         // Register Database Service Provider (Local Capsule Provider)
         $this->app->register(DatabaseServiceProvider::class);
+
+        // Register Filesystem Service Provider (Required for Views & Logs)
+        $this->app->register(\Illuminate\Filesystem\FilesystemServiceProvider::class);
+
+        // Register View Service Provider
+        $this->app->register(\Illuminate\View\ViewServiceProvider::class);
     }
 
     /**
