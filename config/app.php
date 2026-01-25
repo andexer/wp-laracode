@@ -54,8 +54,6 @@ return [
     */
 
 	'providers' => [
-		Illuminate\Filesystem\FilesystemServiceProvider::class,
-		Illuminate\View\ViewServiceProvider::class,
 		App\Providers\AppServiceProvider::class,
 	],
 
