@@ -55,7 +55,7 @@ class LivewireServiceProvider extends ServiceProvider
             }
 
             $finder = new FileViewFinder(new Filesystem, [$viewsPath]);
-            $factory = new Factory($resolver, $finder, $this->app['events']);
+            $factory = new Factory($resolver, $finder, $app->make('events'));
             $factory->setContainer($this->app);
 
             $compiledPath = $this->app->storagePath() . '/framework/views';
