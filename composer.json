@@ -53,6 +53,11 @@
 			"pestphp/pest-plugin": true
 		}
 	},
+	"scripts": {
+		"post-create-project-cmd": [
+			"@php wp-laracode setup"
+		]
+	},
 	"minimum-stability": "stable",
 	"prefer-stable": true,
 	"bin": [
