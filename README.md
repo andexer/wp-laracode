@@ -252,18 +252,17 @@ This is not a legal requirement, but an ethical request to support ongoing open-
 - 💬 [Discussions](https://github.com/andexer/wp-laracode/discussions)
 - 🚀 [Changelog](CHANGELOG.md)
 
-## 🤝 Colaboradores
+## 🤝 Contributors
 
-¡Aceptamos colaboradores! Si quieres mejorar `wp-laracode`, por favor lee nuestra [Guía de Contribución](CONTRIBUTING.md).
+We welcome contributors! If you would like to improve `wp-laracode`, please read our [Contribution Guide](CONTRIBUTING.md).
 
-Este proyecto es mantenido por [Andexer Arvelo](https://github.com/andexer).
+This project is maintained by [Andexer Arvelo](https://github.com/andexer).
 
-## ☕ Donaciones
+## ☕ Donations
 
-Si este proyecto te ha sido útil, considera hacer una donación para mantener su desarrollo activo.
+If you find this project useful, please consider making a donation to support its active development (completely optional).
 
-- [PayPal](https://paypal.me/andexer)
-- [GitHub Sponsors](https://github.com/sponsors/andexer)
+- [PayPal](https://paypal.me/arvelofalcon)
 
 ---
 
