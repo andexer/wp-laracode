@@ -2,7 +2,7 @@
 
 return [
 
-    /*
+	/*
     |--------------------------------------------------------------------------
     | Application Name
     |--------------------------------------------------------------------------
@@ -13,9 +13,9 @@ return [
     |
     */
 
-    'name' => 'Application',
+	'name' => 'Application',
 
-    /*
+	/*
     |--------------------------------------------------------------------------
     | Application Version
     |--------------------------------------------------------------------------
@@ -26,9 +26,9 @@ return [
     |
     */
 
-    'version' => app('git.version'),
+	'version' => app('git.version'),
 
-    /*
+	/*
     |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
@@ -40,9 +40,9 @@ return [
     |
     */
 
-    'env' => 'development',
+	'env' => 'development',
 
-    /*
+	/*
     |--------------------------------------------------------------------------
     | Autoloaded Service Providers
     |--------------------------------------------------------------------------
@@ -53,8 +53,10 @@ return [
     |
     */
 
-    'providers' => [
-        App\Providers\AppServiceProvider::class,
-    ],
+	'providers' => [
+		Illuminate\Filesystem\FilesystemServiceProvider::class,
+		Illuminate\View\ViewServiceProvider::class,
+		App\Providers\AppServiceProvider::class,
+	],
 
 ];
