@@ -214,6 +214,7 @@ class NewCommand extends Command
 			$storagePath . '/logs',
 			$storagePath . '/framework/views',
 			$storagePath . '/framework/cache',
+			$storagePath . '/framework/sessions',
 		];
 
 		foreach ($directories as $dir) {

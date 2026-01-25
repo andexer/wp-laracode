@@ -115,12 +115,12 @@ class PluginServiceProvider extends ServiceProvider
 
         // Register prettier error page (Ignition) in debug mode
         // Ignition provides dark mode and markdown copy button by default
-        if (defined('WP_DEBUG') && WP_DEBUG && class_exists(\Spatie\Ignition\Ignition::class)) {
-            \Spatie\Ignition\Ignition::make()
-                ->setTheme('dark')
-                ->applicationPath({{constantPrefix}}_PATH)
-                ->register();
-        }
+        // if (defined('WP_DEBUG') && WP_DEBUG && class_exists(\Spatie\Ignition\Ignition::class)) {
+        //     \Spatie\Ignition\Ignition::make()
+        //         ->setTheme('dark')
+        //         ->applicationPath({{constantPrefix}}_PATH)
+        //         ->register();
+        // }
     }
 
     /**

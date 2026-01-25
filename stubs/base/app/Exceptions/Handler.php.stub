@@ -158,12 +158,12 @@ class Handler implements ExceptionHandlerContract
     {
         if (defined('WP_DEBUG') && WP_DEBUG) {
             // Use Spatie Ignition if available for pretty errors
-            if (class_exists(\Spatie\Ignition\Ignition::class)) {
-                ob_start();
-                \Spatie\Ignition\Ignition::make()->handleException($e);
-                $content = ob_get_clean();
-                return new \Symfony\Component\HttpFoundation\Response($content, 500);
-            }
+            // if (class_exists(\Spatie\Ignition\Ignition::class)) {
+            //     ob_start();
+            //     \Spatie\Ignition\Ignition::make()->handleException($e);
+            //     $content = ob_get_clean();
+            //     return new \Symfony\Component\HttpFoundation\Response($content, 500);
+            // }
 
             return new \Symfony\Component\HttpFoundation\Response(
                 '<h1>An error occurred</h1>' .
