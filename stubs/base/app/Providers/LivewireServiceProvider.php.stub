@@ -207,7 +207,27 @@ class LivewireServiceProvider extends ServiceProvider
         return (bool) $result;
     }
 
+    /**
+     * Enqueue Livewire scripts using proper WordPress hooks.
+     * This prevents "doing it wrong" notices by registering scripts at the correct time.
+     */
     public function enqueueScripts()
+    {
+        // Enqueue for frontend pages
+        add_action('wp_enqueue_scripts', [$this, 'doEnqueueScripts'], 999);
+
+        // Enqueue for admin pages
+        add_action('admin_enqueue_scripts', [$this, 'doEnqueueScripts'], 999);
+
+        // Enqueue for login page (if needed)
+        add_action('login_enqueue_scripts', [$this, 'doEnqueueScripts'], 999);
+    }
+
+    /**
+     * Actually enqueue the Livewire scripts.
+     * This method is called by WordPress hooks at the appropriate time.
+     */
+    public function doEnqueueScripts()
     {
         // Enqueue Livewire's JavaScript using configured asset URL
         $assetUrl = $this->app['config']->get('livewire.asset_url', {{constantPrefix}}_URL . 'public');
