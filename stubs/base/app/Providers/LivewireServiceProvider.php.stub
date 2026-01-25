@@ -10,41 +10,53 @@ use Illuminate\View\Engines\CompilerEngine;
 use Illuminate\View\Engines\EngineResolver;
 use Illuminate\View\Factory;
 use Illuminate\View\FileViewFinder;
-use Illuminate\Support\Str;
-use Livewire\Component;
-use Livewire\Livewire;
 use Livewire\LivewireManager;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use {{namespace}}\Helpers\Nonce;
 
+/**
+ * Livewire Service Provider
+ *
+ * Integrates Livewire 4 with WordPress in a modular and isolated way.
+ * Each wp-laracode plugin has its own Livewire instance to prevent conflicts.
+ */
 class LivewireServiceProvider extends ServiceProvider
 {
     /**
      * Plugin-specific nonce action for Livewire requests.
      */
-    protected const NONCE_ACTION = 'livewire';
+    protected const NONCE_ACTION = '{{slug}}_livewire';
 
-    public function register()
+    /**
+     * Register services.
+     */
+    public function register(): void
     {
         Facade::setFacadeApplication($this->app);
 
         $this->registerViewFactory();
-        $this->registerSession();
         $this->registerLivewire();
     }
 
-    public function boot()
+    /**
+     * Bootstrap services.
+     */
+    public function boot(): void
     {
         $this->registerBladeDirectives();
+        $this->enqueueAssets();
         $this->registerRestApiEndpoint();
-        $this->enqueueScripts();
     }
 
-    protected function registerViewFactory()
+    /**
+     * Register the view factory with Blade compiler.
+     */
+    protected function registerViewFactory(): void
     {
         $this->app->singleton('view', function ($app) {
             $resolver = new EngineResolver;
+
             // Use configured view path or default to resources/views
             $defaultPath = $this->app->resourcePath('views');
             $viewsPath = $app['config']->get('livewire.view_path', $defaultPath);
@@ -71,23 +83,9 @@ class LivewireServiceProvider extends ServiceProvider
     }
 
     /**
-     * Register session services.
-     */
-    protected function registerSession()
-    {
-        $this->app->singleton('session', function () {
-            $sessionName = '{{slug}}_session_' . get_current_blog_id();
-            return new \Illuminate\Session\Store(
-                $sessionName,
-                new \Illuminate\Session\CookieSessionHandler(new Filesystem, 120)
-            );
-        });
-    }
-
-    /**
      * Register Livewire manager.
      */
-    protected function registerLivewire()
+    protected function registerLivewire(): void
     {
         $this->app->singleton('livewire', fn() => new LivewireManager);
     }
@@ -95,7 +93,7 @@ class LivewireServiceProvider extends ServiceProvider
     /**
      * Register Blade directives for Livewire.
      */
-    protected function registerBladeDirectives()
+    protected function registerBladeDirectives(): void
     {
         $this->app->make('view')->getEngineResolver()->resolve('blade')->getCompiler()->directive('livewire', function ($expression) {
             return "<?php echo \\Livewire\\Livewire::mount({$expression}); ?>";
@@ -103,12 +101,106 @@ class LivewireServiceProvider extends ServiceProvider
     }
 
     /**
-     * Register REST API endpoints.
+     * Enqueue Livewire assets using proper WordPress hooks.
+     *
+     * Uses Livewire's native FrontendAssets mechanism for proper
+     * script/style injection with automatic hydration setup.
      */
-    protected function registerRestApiEndpoint()
+    protected function enqueueAssets(): void
+    {
+        // Frontend pages
+        add_action('wp_head', [$this, 'outputStyles'], 999);
+        add_action('wp_footer', [$this, 'outputScripts'], 999);
+
+        // Admin pages
+        add_action('admin_head', [$this, 'outputStyles'], 999);
+        add_action('admin_footer', [$this, 'outputScripts'], 999);
+
+        // Login page (if needed)
+        add_action('login_head', [$this, 'outputStyles'], 999);
+        add_action('login_footer', [$this, 'outputScripts'], 999);
+    }
+
+    /**
+     * Output Livewire styles in the head.
+     */
+    public function outputStyles(): void
+    {
+        if (!class_exists(\Livewire\Mechanisms\FrontendAssets\FrontendAssets::class)) {
+            return;
+        }
+
+        echo \Livewire\Mechanisms\FrontendAssets\FrontendAssets::styles();
+    }
+
+    /**
+     * Output Livewire scripts with plugin-specific configuration.
+     */
+    public function outputScripts(): void
+    {
+        if (!class_exists(\Livewire\Mechanisms\FrontendAssets\FrontendAssets::class)) {
+            return;
+        }
+
+        // Output Livewire's core scripts
+        echo \Livewire\Mechanisms\FrontendAssets\FrontendAssets::scripts();
+
+        // Inject plugin-specific nonce configuration for WordPress REST API auth
+        $this->outputNonceScript();
+    }
+
+    /**
+     * Output inline script to inject WordPress nonce into Livewire requests.
+     *
+     * This ensures each plugin's Livewire requests are authenticated
+     * with WordPress nonce verification for security.
+     */
+    protected function outputNonceScript(): void
+    {
+        $config = [
+            'updateUri' => rest_url('{{slug}}/v1/livewire/update'),
+            'nonce' => Nonce::create(self::NONCE_ACTION),
+        ];
+
+        $configJson = json_encode($config);
+        $pluginVar = '{{constantPrefix}}';
+
+        echo <<<HTML
+<script data-livewire-config="{{slug}}">
+(function() {
+    window.LivewireConfig_{$pluginVar} = {$configJson};
+
+    // Override fetch for this plugin's Livewire requests
+    var originalFetch = window.fetch;
+    window.fetch = function(url, options) {
+        if (typeof url === 'string' && url.includes('/{{slug}}/v1/livewire/')) {
+            options = options || {};
+            options.headers = options.headers || {};
+            options.headers['X-WP-Nonce'] = window.LivewireConfig_{$pluginVar}.nonce;
+        }
+        return originalFetch.call(this, url, options);
+    };
+})();
+</script>
+HTML;
+    }
+
+    /**
+     * Register REST API endpoints for Livewire updates.
+     *
+     * Each plugin has its own namespaced endpoint to prevent
+     * conflicts with other wp-laracode plugins.
+     */
+    protected function registerRestApiEndpoint(): void
     {
         add_action('rest_api_init', function () {
-            // Plugin-specific endpoint to avoid collisions with other wp-laracode plugins
+            register_rest_route('{{slug}}/v1', '/livewire/update', [
+                'methods' => 'POST',
+                'callback' => [$this, 'handleLivewireRequest'],
+                'permission_callback' => [$this, 'checkPermissions'],
+            ]);
+
+            // Legacy endpoint for backward compatibility
             register_rest_route('{{slug}}/v1', '/livewire/message/(?P<name>[\w-]+)', [
                 'methods' => 'POST',
                 'callback' => [$this, 'handleLivewireRequest'],
@@ -131,8 +223,8 @@ class LivewireServiceProvider extends ServiceProvider
         }
 
         // 2. Check User Capabilities with filter
-        // Default to 'edit_posts' but allow developers to change it via filter
-        $capability = apply_filters('{{slug}}_livewire_capability', 'edit_posts', $request);
+        // Default to 'read' to allow authenticated users, use filter to customize
+        $capability = apply_filters('{{slug}}_livewire_capability', 'read', $request);
 
         if (!current_user_can($capability)) {
             return false;
@@ -145,7 +237,6 @@ class LivewireServiceProvider extends ServiceProvider
      * Handle the Livewire request.
      *
      * @param \WP_REST_Request $wpRequest
-     * @return void
      */
     public function handleLivewireRequest(\WP_REST_Request $wpRequest)
     {
@@ -173,14 +264,16 @@ class LivewireServiceProvider extends ServiceProvider
     /**
      * Send the Symfony response back to the client.
      */
-    protected function sendResponse(Response $response)
+    protected function sendResponse(Response $response): void
     {
         http_response_code($response->getStatusCode());
+
         foreach ($response->headers->allPreserveCase() as $name => $values) {
             foreach ($values as $value) {
                 header($name . ': ' . $value, false);
             }
         }
+
         echo $response->getContent();
         exit;
     }
@@ -201,82 +294,8 @@ class LivewireServiceProvider extends ServiceProvider
         }
 
         // Verify using WordPress function (returns 1 or 2 if valid)
-        // We do not rely on Nonce helper fallback here for extra security context
         $result = wp_verify_nonce($nonce, self::NONCE_ACTION);
 
         return (bool) $result;
-    }
-
-    /**
-     * Enqueue Livewire scripts using proper WordPress hooks.
-     * This prevents "doing it wrong" notices by registering scripts at the correct time.
-     */
-    public function enqueueScripts()
-    {
-        // Enqueue for frontend pages
-        add_action('wp_enqueue_scripts', [$this, 'doEnqueueScripts'], 999);
-
-        // Enqueue for admin pages
-        add_action('admin_enqueue_scripts', [$this, 'doEnqueueScripts'], 999);
-
-        // Enqueue for login page (if needed)
-        add_action('login_enqueue_scripts', [$this, 'doEnqueueScripts'], 999);
-    }
-
-    /**
-     * Actually enqueue the Livewire scripts.
-     * This method is called by WordPress hooks at the appropriate time.
-     */
-    public function doEnqueueScripts()
-    {
-        // Enqueue Livewire's JavaScript using configured asset URL
-        $assetUrl = $this->app['config']->get('livewire.asset_url', {{constantPrefix}}_URL . 'public');
-        $assetUrl = rtrim($assetUrl, '/');
-
-        wp_enqueue_script(
-            '{{slug}}-livewire',
-            $assetUrl . '/vendor/livewire/livewire/dist/livewire.js',
-            [],
-            {{constantPrefix}}_VERSION,
-            true
-        );
-
-        // Plugin-specific JavaScript object to avoid global collisions
-        $livewireConfig = [
-            'update_uri' => rest_url('{{slug}}/v1/livewire/message/'),
-            '_wpnonce' => Nonce::create(self::NONCE_ACTION),
-            'csrf_token' => Nonce::create(self::NONCE_ACTION),
-        ];
-
-        // Assign to plugin-specific global object
-        wp_add_inline_script(
-            '{{slug}}-livewire',
-            'window.Livewire_{{constantPrefix}} = ' . json_encode($livewireConfig) . ';' .
-            'window.Livewire = window.Livewire || {};' .
-            'window.Livewire.updateUri = window.Livewire_{{constantPrefix}}.update_uri;',
-            'before'
-        );
-
-        // Inject nonce into Livewire requests
-        wp_add_inline_script(
-            '{{slug}}-livewire',
-            <<<JS
-(function() {
-    var config = window.Livewire_{{constantPrefix}};
-
-    // Override fetch to add nonce headers for Livewire requests
-    var originalFetch = window.fetch;
-    window.fetch = function(url, options) {
-        if (typeof url === 'string' && url.includes('/{{slug}}/v1/livewire/')) {
-            options = options || {};
-            options.headers = options.headers || {};
-            options.headers['X-WP-Nonce'] = config._wpnonce;
-        }
-        return originalFetch.call(this, url, options);
-    };
-})();
-JS,
-            'after'
-        );
     }
 }
