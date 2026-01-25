@@ -22,6 +22,7 @@ $app = new Application(
 */
 
 // Core plugin configuration (loads config/*.php files)
+$app->register(new \Illuminate\Filesystem\FilesystemServiceProvider($app));
 $app->register(new \Illuminate\Log\LogServiceProvider($app));
 $app->register(new PluginServiceProvider($app));
 
