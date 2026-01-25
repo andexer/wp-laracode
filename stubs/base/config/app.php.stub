@@ -88,7 +88,6 @@ return [
         Illuminate\Translation\TranslationServiceProvider::class,
         Illuminate\Validation\ValidationServiceProvider::class,
         Illuminate\Pipeline\PipelineServiceProvider::class,
-        {{namespace}}\Services\Providers\PluginServiceProvider::class,
         {{namespace}}\Services\Providers\AppServiceProvider::class,
         {{namespace}}\Services\Providers\DatabaseServiceProvider::class,
         {{namespace}}\Services\Providers\LivewireServiceProvider::class,
