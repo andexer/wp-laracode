@@ -93,6 +93,7 @@ class Application extends Container implements ApplicationContract
         $this->instance('app', $this);
         $this->instance('config', new ConfigRepository);
         $this->instance(Container::class, $this);
+        $this->instance(\Illuminate\Contracts\Container\Container::class, $this);
         $this->instance(ApplicationContract::class, $this);
 
         $this->singleton('events', function ($app) {

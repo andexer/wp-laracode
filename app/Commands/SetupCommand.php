@@ -127,9 +127,30 @@ class SetupCommand extends Command
 		$this->info('Running composer update to finalize configuration...');
 		$this->runComposerUpdate();
 
+		// 9. Cleanup Generator Commands (Self-Destruct)
+		$this->cleanupGeneratorCommands();
+
 		$this->info("Configuration complete! Your plugin '{$pluginName}' is ready.");
 		$this->comment("Binary: ./{$slug}");
 		$this->comment("Entry: {$slug}.php");
+	}
+
+	protected function cleanupGeneratorCommands()
+	{
+		$commandsPath = base_path('app/Commands');
+
+		$filesToDelete = [
+			$commandsPath . '/NewCommand.php',
+			$commandsPath . '/InspireCommand.php',
+			// Self-destruct
+			__FILE__
+		];
+
+		foreach ($filesToDelete as $file) {
+			if ($this->filesystem->exists($file)) {
+				$this->filesystem->delete($file);
+			}
+		}
 	}
 
 	protected function copyStubs($source, $destination)
