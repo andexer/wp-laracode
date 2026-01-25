@@ -37,4 +37,4 @@ $app->register(new PluginHookProvider($app));
 
 add_action('plugins_loaded', function () use ($app) {
     $app->boot();
-}, 5);
+}, 10);

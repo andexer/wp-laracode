@@ -57,7 +57,7 @@ class SetupCommand extends Command
 		$authorName = $this->ask('Author Name', 'Me');
 		$authorEmail = $this->ask('Author Email', 'me@example.com');
 		$vendor = $this->ask('Vendor (for composer)', Str::slug($authorName));
-		$template = $this->choice('Which template would you like to use?', ['base', 'minimal'], 'base');
+		$template = $this->choice('Which template would you like to use?', ['base'], 'base');
 
 		$slug = Str::slug($pluginName);
 		$namespace = Str::studly($pluginName); // Simplified default

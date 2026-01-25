@@ -84,6 +84,8 @@ return [
 
     'providers' => [
         Illuminate\Filesystem\FilesystemServiceProvider::class,
+        Illuminate\Log\LogServiceProvider::class,
+        Illuminate\Routing\RoutingServiceProvider::class,
         Illuminate\View\ViewServiceProvider::class,
         Illuminate\Translation\TranslationServiceProvider::class,
         Illuminate\Validation\ValidationServiceProvider::class,
