@@ -18,6 +18,8 @@ class WordPressIntegrationProvider extends ServiceProvider
 
         // Register shortcode for dashboard
         add_shortcode('plugin_welcome_dashboard', function() {
+            // Ensure the Laravel application is fully booted before handling the shortcode.
+            app()->boot();
             // Output buffering to capture view content
             ob_start();
             echo app(WelcomeController::class)->index();
