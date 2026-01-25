@@ -112,7 +112,7 @@ class SetupCommand extends Command
 		// Rename remaining .stub files recursively in root
 		$this->renameStubs($destinationPath);
 
-		// 5. Replace placeholders in all files in root (excluding vendor and stubs, though stubs will be deleted)
+		// 5. Replace placeholders in all files in root options
 		$this->replacePlaceholders($placeholders, $destinationPath);
 
 		// 6. Delete Stubs Directory (Cleanup)
@@ -123,35 +123,48 @@ class SetupCommand extends Command
 			$this->filesystem->delete(base_path($this->currentBinary));
 		}
 
-		// 8. Run Composer Update to refresh lock file and autoload
+		// 8. Pre-Composer Cleanup & Fixes
+		// Remove generator commands to avoid PSR-4 violation warnings during auto-discovery
+		$commandsPath = base_path('app/Commands');
+		$filesToDelete = [
+			$commandsPath . '/NewCommand.php',
+			$commandsPath . '/InspireCommand.php',
+		];
+		foreach ($filesToDelete as $file) {
+			if ($this->filesystem->exists($file)) {
+				$this->filesystem->delete($file);
+			}
+		}
+
+		// Dynamically fix SetupCommand's own namespace to match the new project structure
+		// This trick allows Composer to verify the class location correctly during the update
+		$setupCommandPath = $commandsPath . '/SetupCommand.php';
+		if ($this->filesystem->exists($setupCommandPath)) {
+			$content = $this->filesystem->get($setupCommandPath);
+			$newNamespace = $namespace . '\\Commands';
+			$content = str_replace('namespace App\\Commands;', "namespace {$newNamespace};", $content);
+
+			// Also ensure we don't break the class loading in memory (it's already loaded),
+			// but the file on disk must match for Composer.
+			$this->filesystem->put($setupCommandPath, $content);
+		}
+
+		// 9. Run Composer Update
 		$this->info('Running composer update to finalize configuration...');
 		$this->runComposerUpdate();
 
-		// 9. Cleanup Generator Commands (Self-Destruct)
-		$this->cleanupGeneratorCommands();
+		// 10. Final Cleanup (Self-Destruct)
+		// Now we can delete SetupCommand
+		if ($this->filesystem->exists($setupCommandPath)) {
+			$this->filesystem->delete($setupCommandPath);
+		}
 
 		$this->info("Configuration complete! Your plugin '{$pluginName}' is ready.");
 		$this->comment("Binary: ./{$slug}");
 		$this->comment("Entry: {$slug}.php");
 	}
 
-	protected function cleanupGeneratorCommands()
-	{
-		$commandsPath = base_path('app/Commands');
-
-		$filesToDelete = [
-			$commandsPath . '/NewCommand.php',
-			$commandsPath . '/InspireCommand.php',
-			// Self-destruct
-			__FILE__
-		];
-
-		foreach ($filesToDelete as $file) {
-			if ($this->filesystem->exists($file)) {
-				$this->filesystem->delete($file);
-			}
-		}
-	}
+	// Removed cleanupGeneratorCommands method as it's now inline and split
 
 	protected function copyStubs($source, $destination)
 	{

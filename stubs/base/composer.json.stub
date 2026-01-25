@@ -24,7 +24,9 @@
         "illuminate/translation": "^12.0"
     },
     "require-dev": {
-        "pestphp/pest": "^3.0"
+        "pestphp/pest": "^3.0",
+        "laravel/pint": "^1.0",
+        "mockery/mockery": "^1.6"
     },
     "suggest": {
         "livewire/livewire": "^4.0 - For reactive components",
