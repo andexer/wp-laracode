@@ -38,7 +38,7 @@ class LivewireServiceProvider extends ServiceProvider
     {
         $this->registerBladeDirectives();
         $this->registerRestApiEndpoint();
-        $this->enqueueAssets();
+        $this->enqueueScripts();
     }
 
     protected function registerViewFactory()

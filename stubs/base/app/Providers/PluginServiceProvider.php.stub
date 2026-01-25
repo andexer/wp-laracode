@@ -106,7 +106,10 @@ class PluginServiceProvider extends ServiceProvider
 
         // Register prettier error page (Ignition) in debug mode
         if (defined('WP_DEBUG') && WP_DEBUG && class_exists(\Spatie\Ignition\Ignition::class)) {
-            \Spatie\Ignition\Ignition::make()->register();
+            \Spatie\Ignition\Ignition::make()
+                ->useDarkMode()
+                ->enableShareButton()
+                ->register();
         }
     }
 
