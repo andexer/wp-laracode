@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 
 class MakeProviderCommand extends Command
 {
-    protected $signature = 'make:provider {name : The name of the service provider}';
+    protected $signature = 'make:provider {name : The name of the provider}';
 
     protected $description = 'Create a new service provider class';
 
@@ -23,9 +23,21 @@ class MakeProviderCommand extends Command
     public function handle(): int
     {
         $name = $this->argument('name');
-        $className = Str::studly($name);
 
-        $path = {{constantPrefix}}_PATH . "app/Providers/{$className}.php";
+        // Normalize
+        $name = str_replace(['/', '\\'], '/', $name);
+        $pathParts = explode('/', $name);
+        $className = array_pop($pathParts);
+        $relativePath = implode('/', $pathParts);
+
+        $namespace = '{{namespace}}\Providers';
+        if (!empty($pathParts)) {
+            $namespace .= '\\' . implode('\\', $pathParts);
+        }
+
+        $className = Str::studly($className);
+
+        $path = {{constantPrefix}}_PATH . 'app/Providers/' . ($relativePath ? $relativePath . '/' : '') . $className . '.php';
         $this->ensureDirectoryExists(dirname($path));
 
         if ($this->filesystem->exists($path)) {
@@ -33,7 +45,7 @@ class MakeProviderCommand extends Command
             return Command::FAILURE;
         }
 
-        $this->filesystem->put($path, $this->getStub($className));
+        $this->filesystem->put($path, $this->getStub($namespace, $className));
         $this->components->info("Provider [{$className}] created successfully.");
 
         return Command::SUCCESS;
@@ -46,12 +58,12 @@ class MakeProviderCommand extends Command
         }
     }
 
-    protected function getStub(string $className): string
+    protected function getStub(string $namespace, string $className): string
     {
         return <<<PHP
 <?php
 
-namespace {{namespace}}\Providers;
+namespace {$namespace};
 
 use Illuminate\Support\ServiceProvider;
 

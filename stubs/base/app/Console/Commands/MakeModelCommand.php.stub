@@ -41,9 +41,22 @@ class MakeModelCommand extends Command
     public function handle(): int
     {
         $name = $this->argument('name');
-        $className = Str::studly($name);
 
-        $modelPath = $this->getModelPath($className);
+        // Normalize name for subdirectories
+        $name = str_replace(['/', '\\'], '/', $name);
+        $pathParts = explode('/', $name);
+        $className = array_pop($pathParts);
+        $relativePath = implode('/', $pathParts);
+
+        // Determine Namespace
+        $namespace = '{{namespace}}\Models';
+        if (!empty($pathParts)) {
+            $namespace .= '\\' . implode('\\', $pathParts);
+        }
+
+        $className = Str::studly($className);
+
+        $modelPath = $this->getModelPath($relativePath, $className);
         $this->ensureDirectoryExists(dirname($modelPath));
 
         if ($this->filesystem->exists($modelPath)) {
@@ -51,19 +64,19 @@ class MakeModelCommand extends Command
             return Command::FAILURE;
         }
 
-        $this->filesystem->put($modelPath, $this->getModelStub($className));
+        $this->filesystem->put($modelPath, $this->getModelStub($namespace, $className));
         $this->info("Model [{$className}] created successfully.");
 
         if ($this->option('migration')) {
-            $this->createMigration($name);
+            $this->createMigration($className);
         }
 
         return Command::SUCCESS;
     }
 
-    protected function getModelPath(string $className): string
+    protected function getModelPath(string $relativePath, string $className): string
     {
-        return {{constantPrefix}}_PATH . 'app/Models/' . $className . '.php';
+        return {{constantPrefix}}_PATH . 'app/Models/' . ($relativePath ? $relativePath . '/' : '') . $className . '.php';
     }
 
     protected function ensureDirectoryExists(string $path): void
@@ -75,6 +88,7 @@ class MakeModelCommand extends Command
 
     protected function createMigration(string $modelName): void
     {
+        // Migration table name is usually plural of the model class name, avoiding directory structure
         $tableName = Str::snake(Str::pluralStudly($modelName));
         $timestamp = date('Y_m_d_His');
         $migrationName = "create_{$tableName}_table";
@@ -86,14 +100,14 @@ class MakeModelCommand extends Command
         $this->info("Migration [{$migrationName}] created successfully.");
     }
 
-    protected function getModelStub(string $className): string
+    protected function getModelStub(string $namespace, string $className): string
     {
         $tableName = Str::snake(Str::pluralStudly($className));
 
         return <<<PHP
 <?php
 
-namespace {{namespace}}\Models;
+namespace {$namespace};
 
 use Illuminate\Database\Eloquent\Model;
 

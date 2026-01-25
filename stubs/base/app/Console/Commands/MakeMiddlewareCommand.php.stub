@@ -23,9 +23,21 @@ class MakeMiddlewareCommand extends Command
     public function handle(): int
     {
         $name = $this->argument('name');
-        $className = Str::studly($name);
 
-        $path = {{constantPrefix}}_PATH . "app/Http/Middleware/{$className}.php";
+        // Normalize
+        $name = str_replace(['/', '\\'], '/', $name);
+        $pathParts = explode('/', $name);
+        $className = array_pop($pathParts);
+        $relativePath = implode('/', $pathParts);
+
+        $namespace = '{{namespace}}\Http\Middleware';
+        if (!empty($pathParts)) {
+            $namespace .= '\\' . implode('\\', $pathParts);
+        }
+
+        $className = Str::studly($className);
+
+        $path = {{constantPrefix}}_PATH . 'app/Http/Middleware/' . ($relativePath ? $relativePath . '/' : '') . $className . '.php';
         $this->ensureDirectoryExists(dirname($path));
 
         if ($this->filesystem->exists($path)) {
@@ -33,7 +45,7 @@ class MakeMiddlewareCommand extends Command
             return Command::FAILURE;
         }
 
-        $this->filesystem->put($path, $this->getStub($className));
+        $this->filesystem->put($path, $this->getStub($namespace, $className));
         $this->components->info("Middleware [{$className}] created successfully.");
 
         return Command::SUCCESS;
@@ -46,12 +58,12 @@ class MakeMiddlewareCommand extends Command
         }
     }
 
-    protected function getStub(string $className): string
+    protected function getStub(string $namespace, string $className): string
     {
         return <<<PHP
 <?php
 
-namespace {{namespace}}\Http\Middleware;
+namespace {$namespace};
 
 use Closure;
 use Illuminate\Http\Request;

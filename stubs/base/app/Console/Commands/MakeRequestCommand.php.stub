@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 
 class MakeRequestCommand extends Command
 {
-    protected $signature = 'make:request {name : The name of the form request}';
+    protected $signature = 'make:request {name : The name of the request}';
 
     protected $description = 'Create a new form request class';
 
@@ -23,9 +23,21 @@ class MakeRequestCommand extends Command
     public function handle(): int
     {
         $name = $this->argument('name');
-        $className = Str::studly($name);
 
-        $path = {{constantPrefix}}_PATH . "app/Http/Requests/{$className}.php";
+        // Normalize
+        $name = str_replace(['/', '\\'], '/', $name);
+        $pathParts = explode('/', $name);
+        $className = array_pop($pathParts);
+        $relativePath = implode('/', $pathParts);
+
+        $namespace = '{{namespace}}\Http\Requests';
+        if (!empty($pathParts)) {
+            $namespace .= '\\' . implode('\\', $pathParts);
+        }
+
+        $className = Str::studly($className);
+
+        $path = {{constantPrefix}}_PATH . 'app/Http/Requests/' . ($relativePath ? $relativePath . '/' : '') . $className . '.php';
         $this->ensureDirectoryExists(dirname($path));
 
         if ($this->filesystem->exists($path)) {
@@ -33,7 +45,7 @@ class MakeRequestCommand extends Command
             return Command::FAILURE;
         }
 
-        $this->filesystem->put($path, $this->getStub($className));
+        $this->filesystem->put($path, $this->getStub($namespace, $className));
         $this->components->info("Request [{$className}] created successfully.");
 
         return Command::SUCCESS;
@@ -46,33 +58,31 @@ class MakeRequestCommand extends Command
         }
     }
 
-    protected function getStub(string $className): string
+    protected function getStub(string $namespace, string $className): string
     {
         return <<<PHP
 <?php
 
-namespace {{namespace}}\Http\Requests;
+namespace {$namespace};
+
+use {{namespace}}\Http\Requests\FormRequest;
 
 class {$className} extends FormRequest
 {
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, mixed>
+     * Determine if the user is authorized to make this request.
      */
-    public function rules(): array
+    public function authorize(): bool
     {
-        return [
-            //
-        ];
+        return true;
     }
 
     /**
-     * Get custom validation messages.
+     * Get the validation rules that apply to the request.
      *
-     * @return array<string, string>
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
-    public function messages(): array
+    public function rules(): array
     {
         return [
             //
