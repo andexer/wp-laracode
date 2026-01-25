@@ -32,6 +32,9 @@
         }
     },
     "config": {
+        "platform": {
+            "php": "8.2"
+        },
         "vendor-dir": "vendor",
         "optimize-autoloader": true,
         "sort-packages": true,
