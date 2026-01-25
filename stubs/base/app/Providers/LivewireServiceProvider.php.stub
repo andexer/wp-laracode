@@ -71,6 +71,121 @@ class LivewireServiceProvider extends ServiceProvider
     }
 
     /**
+     * Register session services.
+     */
+    protected function registerSession()
+    {
+        $this->app->singleton('session', function () {
+            $sessionName = '{{slug}}_session_' . get_current_blog_id();
+            return new \Illuminate\Session\Store(
+                $sessionName,
+                new \Illuminate\Session\CookieSessionHandler(new Filesystem, 120)
+            );
+        });
+    }
+
+    /**
+     * Register Livewire manager.
+     */
+    protected function registerLivewire()
+    {
+        $this->app->singleton('livewire', fn() => new LivewireManager);
+    }
+
+    /**
+     * Register Blade directives for Livewire.
+     */
+    protected function registerBladeDirectives()
+    {
+        $this->app->make('view')->getEngineResolver()->resolve('blade')->getCompiler()->directive('livewire', function ($expression) {
+            return "<?php echo \\Livewire\\Livewire::mount({$expression}); ?>";
+        });
+    }
+
+    /**
+     * Register REST API endpoints.
+     */
+    protected function registerRestApiEndpoint()
+    {
+        add_action('rest_api_init', function () {
+            // Plugin-specific endpoint to avoid collisions with other wp-laracode plugins
+            register_rest_route('{{slug}}/v1', '/livewire/message/(?P<name>[\w-]+)', [
+                'methods' => 'POST',
+                'callback' => [$this, 'handleLivewireRequest'],
+                'permission_callback' => [$this, 'checkPermissions'],
+            ]);
+        });
+    }
+
+    /**
+     * Check permissions for the REST request.
+     *
+     * @param \WP_REST_Request $request
+     * @return bool
+     */
+    public function checkPermissions(\WP_REST_Request $request): bool
+    {
+        // 1. Verify Nonce (Strict Header Check)
+        if (!$this->verifyNonce($request)) {
+            return false;
+        }
+
+        // 2. Check User Capabilities with filter
+        // Default to 'edit_posts' but allow developers to change it via filter
+        $capability = apply_filters('{{slug}}_livewire_capability', 'edit_posts', $request);
+
+        if (!current_user_can($capability)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Handle the Livewire request.
+     *
+     * @param \WP_REST_Request $wpRequest
+     * @return void
+     */
+    public function handleLivewireRequest(\WP_REST_Request $wpRequest)
+    {
+        // Bridge WP_REST_Request to a Symfony Request
+        $symfonyRequest = Request::createFromGlobals();
+
+        try {
+            // Let Livewire handle the request and get a Symfony Response
+            $livewireResponse = $this->app->make('livewire')->getHttpConnectionHandler()->handle($symfonyRequest);
+
+            // Bridge the Symfony Response back to WordPress
+            $this->sendResponse($livewireResponse);
+        } catch (\Exception $e) {
+            // Log the error securely (hide details in production)
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('[{{slug}}] Livewire error: ' . $e->getMessage());
+            }
+
+            wp_send_json_error([
+                'message' => __('An error occurred processing the request.', '{{slug}}'),
+            ], 500);
+        }
+    }
+
+    /**
+     * Send the Symfony response back to the client.
+     */
+    protected function sendResponse(Response $response)
+    {
+        http_response_code($response->getStatusCode());
+        foreach ($response->headers->allPreserveCase() as $name => $values) {
+            foreach ($values as $value) {
+                header($name . ': ' . $value, false);
+            }
+        }
+        echo $response->getContent();
+        exit;
+    }
+
+    /**
      * Verify nonce for security with stricter checks.
      *
      * @param \WP_REST_Request $request

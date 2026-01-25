@@ -16,7 +16,7 @@ class DatabaseServiceProvider extends ServiceProvider
     {
         $capsule = new Capsule;
 
-        $capsule->addConnection([
+        $config = [
             'driver'    => 'mysql',
             'host'      => defined('DB_HOST') ? DB_HOST : 'localhost',
             'database'  => defined('DB_NAME') ? DB_NAME : '',
@@ -25,7 +25,12 @@ class DatabaseServiceProvider extends ServiceProvider
             'charset'   => defined('DB_CHARSET') ? DB_CHARSET : 'utf8mb4',
             'collation' => 'utf8mb4_unicode_ci',
             'prefix'    => isset($GLOBALS['wpdb']) ? $GLOBALS['wpdb']->prefix : 'wp_',
-        ], self::CONNECTION_NAME);
+        ];
+
+        // Allow developers to modify connection settings via filter
+        $config = apply_filters('{{slug}}_database_config', $config);
+
+        $capsule->addConnection($config, self::CONNECTION_NAME);
 
         // IMPORTANT: Do NOT use setAsGlobal() to prevent collisions between plugins
         // Each plugin should use its own capsule instance
