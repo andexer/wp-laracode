@@ -4,6 +4,7 @@ namespace {{namespace}}\Hooks;
 
 use {{namespace}}\Services\StorageService;
 use {{namespace}}\Services\CacheService;
+use {{namespace}}\Http\Controllers\WelcomeController;
 
 /**
  * ActivationHook - Handle plugin activation tasks.
@@ -12,7 +13,8 @@ class ActivationHook
 {
     public function __construct(
         protected StorageService $storage,
-        protected CacheService $cache
+        protected CacheService $cache,
+        protected WelcomeController $welcomeController
     ) {}
 
     /**
@@ -23,6 +25,7 @@ class ActivationHook
     public function handle(): void
     {
         $this->setupStorage();
+        $this->createWelcomePage();
         $this->runMigrations();
         $this->runSeeders();
         $this->storeVersion();
@@ -40,6 +43,16 @@ class ActivationHook
         $this->storage->ensureDirectories();
         $this->storage->createHtaccess();
         $this->storage->createIndexFiles();
+    }
+
+    /**
+     * Create default welcome page.
+     *
+     * @return void
+     */
+    protected function createWelcomePage(): void
+    {
+        $this->welcomeController->createWelcomePage();
     }
 
     /**
