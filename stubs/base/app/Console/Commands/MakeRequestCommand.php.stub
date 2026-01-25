@@ -41,12 +41,15 @@ class MakeRequestCommand extends Command
         $this->ensureDirectoryExists(dirname($path));
 
         if ($this->filesystem->exists($path)) {
-            $this->components->error("Request [{$className}] already exists!");
+            $this->error("❌ Request [{$className}] already exists!");
             return Command::FAILURE;
         }
 
         $this->filesystem->put($path, $this->getStub($namespace, $className));
-        $this->components->info("Request [{$className}] created successfully.");
+
+        $relativePath = str_replace({{constantPrefix}}_PATH, '', $path);
+        $this->info("✅ Request [{$className}] created successfully.");
+        $this->line("📍 Location: <comment>{$relativePath}</comment>");
 
         return Command::SUCCESS;
     }

@@ -80,7 +80,7 @@ class MakeLivewireCommand extends Command
         $componentPath = $this->getComponentPath($className);
 
         if ($this->filesystem->exists($componentPath) && !$force) {
-            $this->error("Livewire component [{$className}] already exists!");
+            $this->error("! Livewire component [{$className}] already exists!");
             
             $suggestions = [
                 $className . 'Component',
@@ -108,7 +108,10 @@ class MakeLivewireCommand extends Command
         try {
             $stub = $isInline ? $this->getInlineComponentStub($className) : $this->getComponentStub($className, $viewName);
             $this->filesystem->put($componentPath, $stub);
-            $this->info("Livewire component [{$className}] created successfully.");
+            
+            $relativePath = str_replace({{constantPrefix}}_PATH, '', $componentPath);
+            $this->info("* Livewire component [{$className}] created successfully.");
+            $this->line("=> Location: <comment>{$relativePath}</comment>");
         } catch (\Exception $e) {
             $this->error("Failed to create component: " . $e->getMessage());
             return Command::FAILURE;
@@ -127,7 +130,10 @@ class MakeLivewireCommand extends Command
             } else {
                 $this->ensureDirectoryExists(dirname($viewPath));
                 $this->filesystem->put($viewPath, $this->getViewStub($className));
-                $this->info("Livewire view [livewire.{$viewName}] created successfully.");
+                
+                $relativeViewPath = str_replace({{constantPrefix}}_PATH, '', $viewPath);
+                $this->info("* Livewire view [livewire.{$viewName}] created successfully.");
+                $this->line("=> Location: <comment>{$relativeViewPath}</comment>");
             }
         }
 

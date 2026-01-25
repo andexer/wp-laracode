@@ -84,7 +84,10 @@ class MakeModelCommand extends BaseGeneratorCommand
         $this->ensureDirectoryExists($migrationPath);
 
         $this->filesystem->put($migrationPath, $this->getMigrationStub($tableName));
-        $this->info("Migration [{$migrationName}] created successfully.");
+        
+        $relativeMigrationPath = str_replace({{constantPrefix}}_PATH, '', $migrationPath);
+        $this->info("✅ Migration [{$migrationName}] created successfully.");
+        $this->line("📍 Location: <comment>{$relativeMigrationPath}</comment>");
     }
 
     protected function getStub(string $namespace, string $className): string

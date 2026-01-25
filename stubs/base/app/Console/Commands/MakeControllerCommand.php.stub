@@ -62,7 +62,7 @@ class MakeControllerCommand extends Command
         $this->ensureDirectoryExists(dirname($path));
 
         if ($this->filesystem->exists($path)) {
-            $this->components->error("Controller [{$className}] already exists!");
+            $this->error("❌ Controller [{$className}] already exists!");
             return Command::FAILURE;
         }
 
@@ -81,7 +81,10 @@ class MakeControllerCommand extends Command
 
         $this->filesystem->put($path, $content);
 
-        $this->components->info("Controller [{$className}] created successfully.");
+        $relativePath = str_replace({{constantPrefix}}_PATH, '', $path);
+        $this->info("✅ Controller [{$className}] created successfully.");
+        $this->line("📍 Location: <comment>{$relativePath}</comment>");
+        
         return Command::SUCCESS;
     }
 

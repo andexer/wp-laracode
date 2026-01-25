@@ -19,28 +19,11 @@ if (!defined('{{constantPrefix}}_BASENAME')) {
 	define('{{constantPrefix}}_BASENAME', basename(__DIR__) . '.php');
 }
 
-/*
-|--------------------------------------------------------------------------
-| Register The Auto Loader
-|--------------------------------------------------------------------------
-|
-| Composer provides a convenient, automatically generated class loader for
-| our application. We just need to utilize it! We'll require it into
-| the script here so we do not have to worry about the loading of any
-| of our classes "manually".
-|
-*/
 
-if (file_exists(__DIR__ . '/vendor/autoload.php')) {
-	require_once __DIR__ . '/vendor/autoload.php';
-} else {
-	// This is a fallback for development of the plugin itself
-	if (file_exists(__DIR__ . '/../../vendor/autoload.php')) {
-		require_once __DIR__ . '/../../vendor/autoload.php';
-	} else {
-		echo "Composer dependencies not found. Please run 'composer install'." . PHP_EOL;
-		exit(1);
-	}
+// Requirements Check
+if (version_compare(PHP_VERSION, '8.2.0', '<')) {
+	echo "❌ Error: PHP 8.2 or higher is required. Current version: " . PHP_VERSION . PHP_EOL;
+	exit(1);
 }
 
 /*
@@ -48,9 +31,10 @@ if (file_exists(__DIR__ . '/vendor/autoload.php')) {
 | WordPress CLI Compatibility
 |--------------------------------------------------------------------------
 |
-| Define dummy WordPress functions to allow booting the application
-| in a standalone CLI environment (e.g., when running 'composer install'
-| or plugin generation tools).
+| Define dummy WordPress functions BEFORE loading the autoloader.
+| This is critical because some files in composer's 'files' array
+| (like bootstrap/wordpress/bridge.php) execute immediately and
+| expect these functions to exist.
 |
 */
 
@@ -180,6 +164,27 @@ if (!function_exists('plugin_basename')) {
 	{
 		return basename($file);
 	}
+}
+
+/*
+|--------------------------------------------------------------------------
+| Register The Auto Loader
+|--------------------------------------------------------------------------
+|
+| Composer provides a convenient, automatically generated class loader for
+| our application. We just need to utilize it! We'll require it into
+| the script here so we do not have to worry about the loading of any
+| of our classes "manually".
+|
+*/
+
+if (file_exists(__DIR__ . '/vendor/autoload.php')) {
+	require_once __DIR__ . '/vendor/autoload.php';
+} else {
+	$pluginName = basename(__DIR__);
+	echo "❌ Error: Las dependencias de '{$pluginName}' no están instaladas." . PHP_EOL;
+	echo "💡 Solución: Ejecuta 'cd {$pluginName} && composer install'" . PHP_EOL;
+	exit(1);
 }
 
 /*

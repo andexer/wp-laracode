@@ -39,6 +39,10 @@ class PluginHookProvider extends ServiceProvider
      */
     protected function registerActivationHook(): void
     {
+        if (!function_exists('register_activation_hook')) {
+            return;
+        }
+
         register_activation_hook({{constantPrefix}}_FILE, function () {
             $hook = $this->app->make(ActivationHook::class);
             $hook->handle();
@@ -52,6 +56,10 @@ class PluginHookProvider extends ServiceProvider
      */
     protected function registerDeactivationHook(): void
     {
+        if (!function_exists('register_deactivation_hook')) {
+            return;
+        }
+
         register_deactivation_hook({{constantPrefix}}_FILE, function () {
             $hook = $this->app->make(DeactivationHook::class);
             $hook->handle();

@@ -69,9 +69,9 @@ class AnalyzePluginCommand extends Command
         }
 
         if (!empty($missing)) {
-            $this->error('Missing critical directories: ' . implode(', ', $missing));
+            $this->error('❌ Missing critical directories: ' . implode(', ', $missing));
         } else {
-            $this->info('✓ Directory structure looks good.');
+            $this->info('✅ Directory structure looks good.');
         }
     }
 
@@ -81,13 +81,13 @@ class AnalyzePluginCommand extends Command
         if ($this->filesystem->exists($path)) {
             $content = json_decode($this->filesystem->get($path), true);
             if (json_last_error() === JSON_ERROR_NONE) {
-                 $this->info('✓ composer.json is valid.');
+                 $this->info('✅ composer.json is valid.');
                  // Could check for required dependencies here
             } else {
-                $this->error('✗ composer.json is invalid JSON.');
+                $this->error('❌ composer.json is invalid JSON.');
             }
         } else {
-            $this->error('✗ composer.json not found.');
+            $this->error('❌ composer.json not found.');
         }
     }
 }
