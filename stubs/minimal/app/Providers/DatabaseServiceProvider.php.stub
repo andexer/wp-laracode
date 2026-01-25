@@ -1,0 +1,68 @@
+<?php
+
+namespace {{namespace}}\Providers;
+
+use Illuminate\Database\Capsule\Manager as Capsule;
+use Illuminate\Support\ServiceProvider;
+
+class DatabaseServiceProvider extends ServiceProvider
+{
+    /**
+     * The unique connection name for this plugin to avoid collisions.
+     */
+    protected const CONNECTION_NAME = '{{slug}}';
+
+    public function register()
+    {
+        $capsule = new Capsule;
+
+        $config = [
+            'driver'    => 'mysql',
+            'host'      => defined('DB_HOST') ? DB_HOST : 'localhost',
+            'database'  => defined('DB_NAME') ? DB_NAME : '',
+            'username'  => defined('DB_USER') ? DB_USER : '',
+            'password'  => defined('DB_PASSWORD') ? DB_PASSWORD : '',
+            'charset'   => defined('DB_CHARSET') ? DB_CHARSET : 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix'    => isset($GLOBALS['wpdb']) ? $GLOBALS['wpdb']->prefix : 'wp_',
+        ];
+
+        if (function_exists('apply_filters')) {
+            $config = apply_filters('{{slug}}_database_config', $config);
+        }
+
+        $capsule->addConnection($config, self::CONNECTION_NAME);
+
+        // IMPORTANT: Do NOT use setAsGlobal() to prevent collisions between plugins
+        // Each plugin should use its own capsule instance
+
+        // Boot Eloquent ORM with this capsule
+        $capsule->bootEloquent();
+
+        // Bind the capsule to the container using the connection name
+        $this->app->singleton('db', fn() => $capsule);
+        $this->app->singleton('db.connection', fn() => $capsule->getConnection(self::CONNECTION_NAME));
+
+        // Alias for convenience
+        $this->app->alias('db', Capsule::class);
+    }
+
+    public function boot()
+    {
+        // Set the default connection for models
+        $connection = $this->app->make('db.connection');
+
+        // If you need to run raw queries on the WordPress database
+        // Use: app('db.connection')->table('posts')->get();
+    }
+
+    /**
+     * Get the connection name.
+     *
+     * @return string
+     */
+    public static function getConnectionName(): string
+    {
+        return self::CONNECTION_NAME;
+    }
+}

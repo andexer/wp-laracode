@@ -9,12 +9,12 @@ use Symfony\Component\Process\Process;
 
 class NewCommand extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'new
+	/**
+	 * The name and signature of the console command.
+	 *
+	 * @var string
+	 */
+	protected $signature = 'new
         {name : The name of the plugin (e.g., my-awesome-plugin)}
         {--author= : The author name}
         {--author_email= : The author email}
@@ -22,227 +22,244 @@ class NewCommand extends Command
         {--description= : The plugin description}
         {--namespace= : The root namespace (e.g., MyPlugin)}
         {--license=GPL-2.0-or-later : The license (GPL-2.0-or-later, MIT, etc.)}
+        {--template=base : Template to use (minimal, base)}
         {--force : Overwrite existing files}';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Create a new isolated WordPress plugin using a modern Laravel stack.';
+	/**
+	 * Available templates.
+	 *
+	 * @var array
+	 */
+	protected array $availableTemplates = ['minimal', 'base'];
 
-    /** @var Filesystem */
-    protected $filesystem;
+	/**
+	 * The console command description.
+	 *
+	 * @var string
+	 */
+	protected $description = 'Create a new isolated WordPress plugin using a modern Laravel stack.';
 
-    public function __construct(Filesystem $filesystem)
-    {
-        parent::__construct();
-        $this->filesystem = $filesystem;
-    }
+	/** @var Filesystem */
+	protected $filesystem;
 
-    /**
-     * Execute the console command.
-     */
-    public function handle()
-    {
-        $this->info('Creating a new wp-laracode plugin...');
+	public function __construct(Filesystem $filesystem)
+	{
+		parent::__construct();
+		$this->filesystem = $filesystem;
+	}
 
-        $placeholders = $this->gatherPlaceholders();
-        $destinationPath = getcwd() . '/' . $placeholders['{{slug}}'];
+	/**
+	 * Execute the console command.
+	 */
+	public function handle()
+	{
+		$template = $this->option('template');
 
-        // 1. Copy the stub files to the new plugin directory
-        $this->task('Copying base files', function () use ($destinationPath) {
-            return $this->copyBaseFiles($destinationPath);
-        });
+		if (!in_array($template, $this->availableTemplates)) {
+			$this->error("Invalid template '{$template}'. Available: " . implode(', ', $this->availableTemplates));
+			return Command::FAILURE;
+		}
 
-        $this->renameStubFiles($destinationPath, $placeholders);
+		$this->info("Creating a new wp-laracode plugin using '{$template}' template...");
 
-        // 2. Perform search and replace on placeholders
-        $this->task('Replacing placeholders', function () use ($placeholders, $destinationPath) {
-            return $this->replacePlaceholders($placeholders, $destinationPath);
-        });
+		$placeholders = $this->gatherPlaceholders();
+		$destinationPath = getcwd() . '/' . $placeholders['{{slug}}'];
 
-        // 3. Run composer install
-        $this->task('Installing composer dependencies', function () use ($destinationPath) {
-            return $this->runComposerInstall($destinationPath);
-        });
+		// 1. Copy the stub files to the new plugin directory
+		$this->task('Copying base files', function () use ($destinationPath) {
+			return $this->copyBaseFiles($destinationPath);
+		});
 
-        // 4. Create storage directories for isolation
-        $this->task('Creating storage directories', function () use ($destinationPath) {
-            return $this->createStorageDirectories($destinationPath);
-        });
+		$this->renameStubFiles($destinationPath, $placeholders);
 
-        $this->info("Plugin '{$placeholders['{{pluginName}}']}' created successfully!");
-        $this->newLine();
-        
-        $this->line("🌟 <options=bold>Support the project!</> If you find wp-laracode useful, please consider giving us a star on GitHub:");
-        $this->line("👉 <href=https://github.com/andexer/wp-laracode>https://github.com/andexer/wp-laracode</>");
-        $this->newLine();
+		// 2. Perform search and replace on placeholders
+		$this->task('Replacing placeholders', function () use ($placeholders, $destinationPath) {
+			return $this->replacePlaceholders($placeholders, $destinationPath);
+		});
 
-        $this->comment("Next steps:");
-        $this->line("  1. cd {$placeholders['{{slug}}']}");
-        $this->line("  2. ./{$placeholders['{{slug}}']} list");
-        $this->line("  3. Copy the plugin to wp-content/plugins/ and activate it");
-    }
+		// 3. Run composer install
+		$this->task('Installing composer dependencies', function () use ($destinationPath) {
+			return $this->runComposerInstall($destinationPath);
+		});
 
-    protected function copyBaseFiles($destinationPath): bool
-    {
-        $sourcePath = $this->getBaseStubPath();
+		// 4. Create storage directories for isolation
+		$this->task('Creating storage directories', function () use ($destinationPath) {
+			return $this->createStorageDirectories($destinationPath);
+		});
 
-        if ($this->filesystem->exists($destinationPath)) {
-            if (!$this->option('force')) {
-                $this->error('Directory already exists. Use --force to overwrite.');
-                return false;
-            }
-            $this->filesystem->deleteDirectory($destinationPath);
-        }
+		$this->info("Plugin '{$placeholders['{{pluginName}}']}' created successfully!");
+		$this->newLine();
 
-        $this->filesystem->copyDirectory($sourcePath, $destinationPath);
+		$this->line("🌟 <options=bold>Support the project!</> If you find wp-laracode useful, please consider giving us a star on GitHub:");
+		$this->line("👉 <href=https://github.com/andexer/wp-laracode>https://github.com/andexer/wp-laracode</>");
+		$this->newLine();
 
-        return true;
-    }
+		$this->comment("Next steps:");
+		$this->line("  1. cd {$placeholders['{{slug}}']}");
+		$this->line("  2. ./{$placeholders['{{slug}}']} list");
+		$this->line("  3. Copy the plugin to wp-content/plugins/ and activate it");
+	}
 
-    protected function getBaseStubPath(): string
-    {
-        // Check if running as a compiled phar
-        if (str_starts_with(__FILE__, 'phar://')) {
-            return dirname(__DIR__, 2) . '/stubs/base';
-        }
+	protected function copyBaseFiles($destinationPath): bool
+	{
+		$sourcePath = $this->getBaseStubPath();
 
-        // Running in development
-        return base_path('stubs/base');
-    }
+		if ($this->filesystem->exists($destinationPath)) {
+			if (!$this->option('force')) {
+				$this->error('Directory already exists. Use --force to overwrite.');
+				return false;
+			}
+			$this->filesystem->deleteDirectory($destinationPath);
+		}
 
-    protected function renameStubFiles(string $destinationPath, array $placeholders): void
-    {
-        // Rename the main CLI binary
-        $this->filesystem->move(
-            $destinationPath . '/cli.stub',
-            $destinationPath . '/' . $placeholders['{{slug}}']
-        );
-        $this->filesystem->chmod($destinationPath . '/' . $placeholders['{{slug}}'], 0755);
+		$this->filesystem->copyDirectory($sourcePath, $destinationPath);
 
-        // Rename the main plugin file
-        $this->filesystem->move(
-            $destinationPath . '/plugin.php.stub',
-            $destinationPath . '/' . $placeholders['{{slug}}'] . '.php'
-        );
+		return true;
+	}
 
-        // Rename all other .stub files (recursive)
-        $this->renameAllStubFilesRecursively($destinationPath);
-    }
+	protected function getBaseStubPath(): string
+	{
+		$template = $this->option('template') ?: 'base';
 
-    protected function renameAllStubFilesRecursively(string $path): void
-    {
-        $files = $this->filesystem->allFiles($path);
+		// Check if running as a compiled phar
+		if (str_starts_with(__FILE__, 'phar://')) {
+			return dirname(__DIR__, 2) . '/stubs/' . $template;
+		}
 
-        foreach ($files as $file) {
-            $filePath = $file->getRealPath();
+		// Running in development
+		return base_path('stubs/' . $template);
+	}
 
-            // Skip if not a .stub file
-            if (!str_ends_with($filePath, '.stub')) {
-                continue;
-            }
+	protected function renameStubFiles(string $destinationPath, array $placeholders): void
+	{
+		// Rename the main CLI binary
+		$this->filesystem->move(
+			$destinationPath . '/cli.stub',
+			$destinationPath . '/' . $placeholders['{{slug}}']
+		);
+		$this->filesystem->chmod($destinationPath . '/' . $placeholders['{{slug}}'], 0755);
 
-            // Determine new file name (remove .stub extension)
-            $newPath = substr($filePath, 0, -5); // Remove '.stub'
+		// Rename the main plugin file
+		$this->filesystem->move(
+			$destinationPath . '/plugin.php.stub',
+			$destinationPath . '/' . $placeholders['{{slug}}'] . '.php'
+		);
 
-            // For Blade templates, keep proper extension
-            if (str_ends_with($newPath, '.blade.php')) {
-                // Already correct: file.blade.php.stub -> file.blade.php
-            }
+		// Rename all other .stub files (recursive)
+		$this->renameAllStubFilesRecursively($destinationPath);
+	}
 
-            $this->filesystem->move($filePath, $newPath);
-        }
-    }
+	protected function renameAllStubFilesRecursively(string $path): void
+	{
+		$files = $this->filesystem->allFiles($path);
 
-    protected function replacePlaceholders(array $placeholders, string $destinationPath): bool
-    {
-        $files = $this->filesystem->allFiles($destinationPath, false);
+		foreach ($files as $file) {
+			$filePath = $file->getRealPath();
 
-        foreach ($files as $file) {
-            $content = $this->filesystem->get($file->getRealPath());
+			// Skip if not a .stub file
+			if (!str_ends_with($filePath, '.stub')) {
+				continue;
+			}
 
-            $newContent = str_replace(
-                array_keys($placeholders),
-                array_values($placeholders),
-                $content
-            );
+			// Determine new file name (remove .stub extension)
+			$newPath = substr($filePath, 0, -5); // Remove '.stub'
 
-            $this->filesystem->put($file->getRealPath(), $newContent);
-        }
+			// For Blade templates, keep proper extension
+			if (str_ends_with($newPath, '.blade.php')) {
+				// Already correct: file.blade.php.stub -> file.blade.php
+			}
 
-        return true;
-    }
+			$this->filesystem->move($filePath, $newPath);
+		}
+	}
 
-    protected function runComposerInstall(string $destinationPath): bool
-    {
-        $process = new Process(['composer', 'install', '--no-dev', '--quiet'], $destinationPath);
-        $process->setTimeout(300);
-        $process->run();
+	protected function replacePlaceholders(array $placeholders, string $destinationPath): bool
+	{
+		$files = $this->filesystem->allFiles($destinationPath, false);
 
-        if (!$process->isSuccessful()) {
-            $this->error('Composer install failed: ' . $process->getErrorOutput());
-            return false;
-        }
+		foreach ($files as $file) {
+			$content = $this->filesystem->get($file->getRealPath());
 
-        return true;
-    }
+			$newContent = str_replace(
+				array_keys($placeholders),
+				array_values($placeholders),
+				$content
+			);
 
-    protected function createStorageDirectories(string $destinationPath): bool
-    {
-        $storagePath = $destinationPath . '/storage';
+			$this->filesystem->put($file->getRealPath(), $newContent);
+		}
 
-        $directories = [
-            $storagePath . '/logs',
-            $storagePath . '/framework/views',
-            $storagePath . '/framework/cache',
-        ];
+		return true;
+	}
 
-        foreach ($directories as $dir) {
-            if (!$this->filesystem->isDirectory($dir)) {
-                $this->filesystem->makeDirectory($dir, 0755, true);
-            }
-        }
+	protected function runComposerInstall(string $destinationPath): bool
+	{
+		$process = new Process(['composer', 'install', '--no-dev', '--quiet'], $destinationPath);
+		$process->setTimeout(300);
+		$process->run();
 
-        // Create .gitkeep files
-        foreach ($directories as $dir) {
-            $gitkeep = $dir . '/.gitkeep';
-            if (!$this->filesystem->exists($gitkeep)) {
-                $this->filesystem->put($gitkeep, '');
-            }
-        }
+		if (!$process->isSuccessful()) {
+			$this->error('Composer install failed: ' . $process->getErrorOutput());
+			return false;
+		}
 
-        return true;
-    }
+		return true;
+	}
 
-    /**
-     * Gather all the placeholders and their values.
-     *
-     * @return array
-     */
-    protected function gatherPlaceholders(): array
-    {
-        $name = $this->argument('name');
-        $slug = Str::slug($name);
-        $namespace = $this->option('namespace') ?: Str::studly($name);
-        $pluginName = Str::headline($name);
-        $constPrefix = Str::upper(str_replace('-', '_', Str::snake($name)));
-        $functionPrefix = str_replace('-', '_', $slug);
+	protected function createStorageDirectories(string $destinationPath): bool
+	{
+		$storagePath = $destinationPath . '/storage';
 
-        return [
-            '{{name}}' => $name,
-            '{{slug}}' => $slug,
-            '{{functionPrefix}}' => $functionPrefix,
-            '{{namespace}}' => $namespace,
-            '{{pluginName}}' => $pluginName,
-            '{{constantPrefix}}' => $constPrefix,
-            '{{description}}' => $this->option('description') ?: "A new plugin named {$pluginName}.",
-            '{{authorName}}' => $this->option('author') ?: 'Your Name',
-            '{{authorEmail}}' => $this->option('author_email') ?: 'you@example.com',
-            '{{authorUrl}}' => $this->option('author_url') ?: 'https://example.com',
-            '{{vendor}}' => Str::slug($this->option('author') ?: 'your-name'),
-            '{{license}}' => $this->option('license') ?: 'GPL-2.0-or-later',
-        ];
-    }
+		$directories = [
+			$storagePath . '/logs',
+			$storagePath . '/framework/views',
+			$storagePath . '/framework/cache',
+		];
+
+		foreach ($directories as $dir) {
+			if (!$this->filesystem->isDirectory($dir)) {
+				$this->filesystem->makeDirectory($dir, 0755, true);
+			}
+		}
+
+		// Create .gitkeep files
+		foreach ($directories as $dir) {
+			$gitkeep = $dir . '/.gitkeep';
+			if (!$this->filesystem->exists($gitkeep)) {
+				$this->filesystem->put($gitkeep, '');
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * Gather all the placeholders and their values.
+	 *
+	 * @return array
+	 */
+	protected function gatherPlaceholders(): array
+	{
+		$name = $this->argument('name');
+		$slug = Str::slug($name);
+		$namespace = $this->option('namespace') ?: Str::studly($name);
+		$pluginName = Str::headline($name);
+		$constPrefix = Str::upper(str_replace('-', '_', Str::snake($name)));
+		$functionPrefix = str_replace('-', '_', $slug);
+
+		return [
+			'{{name}}' => $name,
+			'{{slug}}' => $slug,
+			'{{functionPrefix}}' => $functionPrefix,
+			'{{namespace}}' => $namespace,
+			'{{pluginName}}' => $pluginName,
+			'{{constantPrefix}}' => $constPrefix,
+			'{{description}}' => $this->option('description') ?: "A new plugin named {$pluginName}.",
+			'{{authorName}}' => $this->option('author') ?: 'Your Name',
+			'{{authorEmail}}' => $this->option('author_email') ?: 'you@example.com',
+			'{{authorUrl}}' => $this->option('author_url') ?: 'https://example.com',
+			'{{vendor}}' => Str::slug($this->option('author') ?: 'your-name'),
+			'{{license}}' => $this->option('license') ?: 'GPL-2.0-or-later',
+		];
+	}
 }

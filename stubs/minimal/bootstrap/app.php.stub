@@ -1,0 +1,47 @@
+<?php
+
+use {{namespace}}\Application;
+use {{namespace}}\Providers\AppServiceProvider;
+use {{namespace}}\Providers\DatabaseServiceProvider;
+use {{namespace}}\Providers\PluginServiceProvider;
+
+/*
+|--------------------------------------------------------------------------
+| Create The Application
+|--------------------------------------------------------------------------
+*/
+
+$app = new Application(
+    realpath(__DIR__ . '/../')
+);
+
+/*
+|--------------------------------------------------------------------------
+| Register Service Providers
+|--------------------------------------------------------------------------
+*/
+
+// Core plugin configuration (loads config/*.php files)
+$app->register(new PluginServiceProvider($app));
+
+// Application services
+$app->register(new AppServiceProvider($app));
+
+// Database and Eloquent
+$app->register(new DatabaseServiceProvider($app));
+
+/*
+|--------------------------------------------------------------------------
+| Bind Important Interfaces
+|--------------------------------------------------------------------------
+*/
+
+$app->singleton(Illuminate\Contracts\Console\Kernel::class, {{namespace}}\Console\Kernel::class);
+
+/*
+|--------------------------------------------------------------------------
+| Return The Application
+|--------------------------------------------------------------------------
+*/
+
+return $app;

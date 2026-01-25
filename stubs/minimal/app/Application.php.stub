@@ -1,0 +1,427 @@
+<?php
+
+namespace {{namespace}};
+
+use Illuminate\Config\Repository as ConfigRepository;
+use Illuminate\Container\Container;
+use Illuminate\Support\ServiceProvider;
+use Illuminate\Contracts\Foundation\Application as ApplicationContract;
+
+/**
+ * Application Container
+ *
+ * Singleton container for the plugin. Each plugin has its own isolated
+ * container instance to prevent conflicts with other wp-laracode plugins.
+ */
+class Application extends Container implements ApplicationContract
+{
+    /**
+     * The Application version.
+     *
+     * @var string
+     */
+    const VERSION = '{{version}}';
+
+    /**
+     * The base path for the application installation.
+     *
+     * @var string
+     */
+    protected $basePath;
+
+    /**
+     * The service providers that have been registered.
+     *
+     * @var array
+     */
+    protected $serviceProviders = [];
+
+    /**
+     * The loaded service providers.
+     *
+     * @var array
+     */
+    protected $loadedProviders = [];
+
+    /**
+     * The singleton instance for THIS plugin only.
+     */
+    protected static $pluginInstance;
+
+    /**
+     * Indicates if the application has been booted.
+     *
+     * @var bool
+     */
+    protected $booted = false;
+
+    /**
+     * Create a new application instance.
+     *
+     * @param  string|null  $basePath
+     * @return void
+     */
+    public function __construct($basePath = null)
+    {
+        if ($basePath) {
+            $this->setBasePath($basePath);
+        }
+
+        static::$pluginInstance = $this;
+
+        $this->registerBaseBindings();
+        $this->registerCoreContainerAliases();
+    }
+
+    /**
+     * Get the plugin application instance.
+     */
+    public static function getInstance()
+    {
+        return static::$pluginInstance;
+    }
+
+    /**
+     * Register the basic bindings into the container.
+     *
+     * @return void
+     */
+    protected function registerBaseBindings()
+    {
+        static::setInstance($this);
+
+        $this->instance('app', $this);
+        $this->instance('config', new ConfigRepository);
+        $this->instance(Container::class, $this);
+        $this->instance(ApplicationContract::class, $this);
+
+        $this->singleton('events', function ($app) {
+            return new \Illuminate\Events\Dispatcher($app);
+        });
+        $this->alias('events', \Illuminate\Contracts\Events\Dispatcher::class);
+        $this->alias('events', \Illuminate\Events\Dispatcher::class);
+    }
+
+    /**
+     * Set the base path for the application.
+     *
+     * @param  string  $basePath
+     * @return $this
+     */
+    public function setBasePath($basePath)
+    {
+        $this->basePath = rtrim($basePath, '\/');
+
+        $this->bindPathsInContainer();
+
+        return $this;
+    }
+
+    /**
+     * Get the base path of the Laravel installation.
+     *
+     * @param  string  $path
+     * @return string
+     */
+    public function basePath($path = '')
+    {
+        return $this->basePath . ($path ? DIRECTORY_SEPARATOR . $path : $path);
+    }
+
+    /**
+     * Get the path to the bootstrap directory.
+     *
+     * @param  string  $path
+     * @return string
+     */
+    public function bootstrapPath($path = '')
+    {
+        return $this->basePath . DIRECTORY_SEPARATOR . 'bootstrap' . ($path ? DIRECTORY_SEPARATOR . $path : $path);
+    }
+
+    /**
+     * Bind all of the application paths in the container.
+     *
+     * @return void
+     */
+    protected function bindPathsInContainer()
+    {
+        $this->instance('path', $this->basePath());
+        $this->instance('path.base', $this->basePath());
+        $this->instance('path.config', $this->configPath());
+        $this->instance('path.public', $this->publicPath());
+        $this->instance('path.storage', $this->storagePath());
+        $this->instance('path.database', $this->databasePath());
+        $this->instance('path.resources', $this->resourcePath());
+        $this->instance('path.bootstrap', $this->bootstrapPath());
+        $this->instance('path.lang', $this->langPath());
+    }
+
+    public function appPath($path = '')
+    {
+        return $this->basePath('app') . ($path ? DIRECTORY_SEPARATOR . $path : '');
+    }
+
+    /**
+     * Get the path to the application "app" directory.
+     *
+     * @param  string  $path
+     * @return string
+     */
+    public function path($path = '')
+    {
+        return $this->appPath($path);
+    }
+
+    public function configPath($path = '')
+    {
+        return $this->basePath('config') . ($path ? DIRECTORY_SEPARATOR . $path : '');
+    }
+
+    public function storagePath($path = '')
+    {
+        return $this->basePath('storage') . ($path ? DIRECTORY_SEPARATOR . $path : '');
+    }
+
+    public function resourcePath($path = '')
+    {
+        return $this->basePath('resources') . ($path ? DIRECTORY_SEPARATOR . $path : '');
+    }
+
+    public function langPath($path = '')
+    {
+        return $this->resourcePath('lang') . ($path ? DIRECTORY_SEPARATOR . $path : '');
+    }
+
+    public function databasePath($path = '')
+    {
+        return $this->basePath('database') . ($path ? DIRECTORY_SEPARATOR . $path : '');
+    }
+
+    public function publicPath($path = '')
+    {
+        return $this->basePath('public') . ($path ? DIRECTORY_SEPARATOR . $path : '');
+    }
+
+    /**
+     * Register a service provider.
+     */
+    public function register($provider, $force = false)
+    {
+        if (is_string($provider)) {
+            $provider = new $provider($this);
+        }
+
+        if (method_exists($provider, 'register')) {
+            $provider->register();
+        }
+
+        $this->serviceProviders[] = $provider;
+
+        // If already booted, boot the provider immediately
+        if ($this->booted && method_exists($provider, 'boot')) {
+            $this->call([$provider, 'boot']);
+        }
+
+        return $provider;
+    }
+
+    /**
+     * Boot the application and all service providers.
+     */
+    public function boot(): void
+    {
+        if ($this->booted) {
+            return;
+        }
+
+        foreach ($this->serviceProviders as $provider) {
+            if (method_exists($provider, 'boot')) {
+                $this->call([$provider, 'boot']);
+            }
+        }
+
+        $this->booted = true;
+    }
+
+    /**
+     * Determine if the application has been booted.
+     */
+    public function isBooted(): bool
+    {
+        return $this->booted;
+    }
+
+    /**
+     * Get all registered service providers.
+     *
+     * @return ServiceProvider[]
+     */
+    public function getProviders($provider = null)
+    {
+        return $this->serviceProviders;
+    }
+
+    /**
+     * Register core container aliases.
+     */
+    protected function registerCoreContainerAliases(): void
+    {
+        $aliases = [
+            'app' => [self::class, Container::class],
+            'config' => [ConfigRepository::class, \Illuminate\Contracts\Config\Repository::class],
+        ];
+
+        foreach ($aliases as $key => $group) {
+            foreach ((array) $group as $alias) {
+                $this->alias($key, $alias);
+            }
+        }
+    }
+
+    /**
+     * Get the version number of the application.
+     */
+    public function version()
+    {
+        return static::VERSION;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Application Contract Methods
+    |--------------------------------------------------------------------------
+    |
+    | Methods required by Illuminate\Contracts\Foundation\Application.
+    |
+    */
+
+    public function environment(...$environments)
+    {
+        if (count($environments) > 0) {
+            return in_array('production', $environments);
+        }
+        return 'production';
+    }
+
+    public function runningInConsole()
+    {
+        return defined('WP_CLI') || php_sapi_name() === 'cli';
+    }
+
+    public function runningUnitTests()
+    {
+        return defined('PEST') || defined('PHPUNIT_COMPOSER_INSTALL');
+    }
+
+    public function hasDebugModeEnabled()
+    {
+        return defined('WP_DEBUG') && WP_DEBUG;
+    }
+
+    public function isDownForMaintenance()
+    {
+        return false;
+    }
+
+    public function registerConfiguredProviders()
+    {
+        // Handled by PluginServiceProvider
+    }
+
+    public function registerDeferredProvider($provider, $service = null)
+    {
+        return $this->register($provider);
+    }
+
+    public function resolveProvider($provider)
+    {
+        return new $provider($this);
+    }
+
+    public function booting($callback)
+    {
+        // Simple implementation
+        call_user_func($callback, $this);
+    }
+
+    public function booted($callback)
+    {
+        // Simple implementation
+        if ($this->isBooted()) {
+            call_user_func($callback, $this);
+        }
+    }
+
+    public function terminate()
+    {
+        // No-op for now
+    }
+
+    public function getNamespace()
+    {
+        return __NAMESPACE__ . '\\';
+    }
+
+    public function getLocale()
+    {
+        return get_locale();
+    }
+
+    public function setLocale($locale)
+    {
+        // No-op as WP handles locale
+    }
+
+    public function getFallbackLocale()
+    {
+        return 'en_US';
+    }
+
+    public function bootstrapWith(array $bootstrappers)
+    {
+        $this->hasBeenBootstrapped = true;
+
+        foreach ($bootstrappers as $bootstrapper) {
+            $this['events']->dispatch('bootstrapping: '.$bootstrapper, [$this]);
+
+            $this->make($bootstrapper)->bootstrap($this);
+
+            $this['events']->dispatch('bootstrapped: '.$bootstrapper, [$this]);
+        }
+    }
+
+    public function afterLoadingProvider($provider)
+    {
+        // No-op
+    }
+
+    public function hasBeenBootstrapped()
+    {
+        return $this->booted;
+    }
+
+    public function loadDeferredProviders()
+    {
+        // No-op
+    }
+
+    public function setSuccessfulBootstrappers(array $bootstrappers)
+    {
+        // No-op
+    }
+
+    public function maintenanceMode()
+    {
+        return null;
+    }
+    public function terminating($callback)
+    {
+        // No-op
+    }
+
+    public function shouldSkipMiddleware()
+    {
+        return false;
+    }
+}

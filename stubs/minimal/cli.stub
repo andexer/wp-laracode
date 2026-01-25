@@ -1,0 +1,229 @@
+#!/usr/bin/env php
+<?php
+
+define('{{constantPrefix}}_START', microtime(true));
+
+
+
+// Define Plugin Constants for CLI environment
+if (!defined('{{constantPrefix}}_PATH')) {
+	define('{{constantPrefix}}_PATH', __DIR__ . '/');
+}
+if (!defined('{{constantPrefix}}_URL')) {
+	define('{{constantPrefix}}_URL', 'http://localhost/');
+}
+if (!defined('{{constantPrefix}}_VERSION')) {
+	define('{{constantPrefix}}_VERSION', '1.0.0');
+}
+if (!defined('{{constantPrefix}}_BASENAME')) {
+	define('{{constantPrefix}}_BASENAME', basename(__DIR__) . '.php');
+}
+
+/*
+|--------------------------------------------------------------------------
+| Register The Auto Loader
+|--------------------------------------------------------------------------
+|
+| Composer provides a convenient, automatically generated class loader for
+| our application. We just need to utilize it! We'll require it into
+| the script here so we do not have to worry about the loading of any
+| of our classes "manually".
+|
+*/
+
+if (file_exists(__DIR__ . '/vendor/autoload.php')) {
+	require_once __DIR__ . '/vendor/autoload.php';
+} else {
+	// This is a fallback for development of the plugin itself
+	if (file_exists(__DIR__ . '/../../vendor/autoload.php')) {
+		require_once __DIR__ . '/../../vendor/autoload.php';
+	} else {
+		echo "Composer dependencies not found. Please run 'composer install'." . PHP_EOL;
+		exit(1);
+	}
+}
+
+/*
+|--------------------------------------------------------------------------
+| WordPress CLI Compatibility
+|--------------------------------------------------------------------------
+|
+| Define dummy WordPress functions to allow booting the application
+| in a standalone CLI environment (e.g., when running 'composer install'
+| or plugin generation tools).
+|
+*/
+
+if (!function_exists('add_action')) {
+	function add_action() {}
+}
+if (!function_exists('apply_filters')) {
+	function apply_filters($tag, $value)
+	{
+		return $value;
+	}
+}
+if (!function_exists('get_current_blog_id')) {
+	function get_current_blog_id()
+	{
+		return 1;
+	}
+}
+if (!function_exists('rest_url')) {
+	function rest_url($path = '')
+	{
+		return 'http://localhost/wp-json/' . ltrim($path, '/');
+	}
+}
+if (!function_exists('__')) {
+	function __($text, $domain = 'default')
+	{
+		return $text;
+	}
+}
+if (!function_exists('esc_attr')) {
+	function esc_attr($text)
+	{
+		return $text;
+	}
+}
+if (!function_exists('esc_html')) {
+	function esc_html($text)
+	{
+		return $text;
+	}
+}
+if (!function_exists('register_activation_hook')) {
+	function register_activation_hook() {}
+}
+if (!function_exists('register_deactivation_hook')) {
+	function register_deactivation_hook() {}
+}
+if (!function_exists('wp_mkdir_p')) {
+	function wp_mkdir_p($path)
+	{
+		@mkdir($path, 0755, true);
+		return is_dir($path);
+	}
+}
+if (!function_exists('update_option')) {
+	function update_option() {}
+}
+if (!function_exists('get_option')) {
+	function get_option($option, $default = false)
+	{
+		return $default;
+	}
+}
+if (!function_exists('add_shortcode')) {
+	function add_shortcode() {}
+}
+if (!function_exists('add_menu_page')) {
+	function add_menu_page() {}
+}
+if (!function_exists('current_time')) {
+	function current_time()
+	{
+		return date('Y-m-d H:i:s');
+	}
+}
+if (!function_exists('wp_send_json_error')) {
+	function wp_send_json_error()
+	{
+		exit(1);
+	}
+}
+if (!function_exists('wp_verify_nonce')) {
+	function wp_verify_nonce()
+	{
+		return 1;
+	}
+}
+if (!function_exists('wp_enqueue_script')) {
+	function wp_enqueue_script() {}
+}
+if (!function_exists('wp_add_inline_script')) {
+	function wp_add_inline_script() {}
+}
+if (!function_exists('current_user_can')) {
+	function current_user_can()
+	{
+		return true;
+	}
+}
+if (!function_exists('is_user_logged_in')) {
+	function is_user_logged_in()
+	{
+		return true;
+	}
+}
+if (!function_exists('get_current_user_id')) {
+	function get_current_user_id()
+	{
+		return 1;
+	}
+}
+if (!function_exists('plugin_dir_path')) {
+	function plugin_dir_path($file)
+	{
+		return dirname($file) . '/';
+	}
+}
+if (!function_exists('plugin_dir_url')) {
+	function plugin_dir_url($file)
+	{
+		return 'http://localhost/wp-content/plugins/' . basename(dirname($file)) . '/';
+	}
+}
+if (!function_exists('plugin_basename')) {
+	function plugin_basename($file)
+	{
+		return basename($file);
+	}
+}
+
+/*
+|--------------------------------------------------------------------------
+| Create The Application
+|--------------------------------------------------------------------------
+|
+| The first thing we will do is create a new Laravel application instance
+| which serves as the "glue" for all the components of Laravel, and is
+| the IoC container for the system binding all of the various parts.
+|
+*/
+
+$app = require_once __DIR__ . '/bootstrap/app.php';
+
+/*
+|--------------------------------------------------------------------------
+| Run The Artisan Application
+|--------------------------------------------------------------------------
+|
+| When we run the console application, the current CLI command will be
+| executed in this console and the response sent back to a terminal
+| or another output device for the developers. Here goes nothing!
+|
+*/
+
+$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+
+$status = $kernel->handle(
+	$input = new Symfony\Component\Console\Input\ArgvInput,
+	new Symfony\Component\Console\Output\ConsoleOutput
+);
+
+/*
+|--------------------------------------------------------------------------
+| Shutdown The Application
+|--------------------------------------------------------------------------
+|
+| Once Artisan has finished running, we will fire off the shutdown events
+| so that any final work may be done by the application before we shut
+| down the process. This is the last thing to happen to the request.
+|
+*/
+
+$kernel->terminate($input, $status);
+
+exit($status);

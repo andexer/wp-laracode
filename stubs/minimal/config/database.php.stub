@@ -1,0 +1,54 @@
+<?php
+
+return [
+    /*
+    |--------------------------------------------------------------------------
+    | Default Database Connection Name
+    |--------------------------------------------------------------------------
+    |
+    | Here you may specify which of the database connections below you wish
+    | to use as your default connection for all database work.
+    |
+    */
+
+    'default' => '{{slug}}',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Database Connections
+    |--------------------------------------------------------------------------
+    |
+    | Here are each of the database connections setup for your application.
+    | The connection uses WordPress's database credentials.
+    |
+    */
+
+    'connections' => [
+        '{{slug}}' => [
+            'driver' => 'mysql',
+            'host' => defined('DB_HOST') ? DB_HOST : 'localhost',
+            'port' => '3306',
+            'database' => defined('DB_NAME') ? DB_NAME : '',
+            'username' => defined('DB_USER') ? DB_USER : '',
+            'password' => defined('DB_PASSWORD') ? DB_PASSWORD : '',
+            'charset' => defined('DB_CHARSET') ? DB_CHARSET : 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => isset($GLOBALS['wpdb']) ? $GLOBALS['wpdb']->prefix : 'wp_',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Migration Repository Table
+    |--------------------------------------------------------------------------
+    |
+    | This table keeps track of all the migrations that have already run for
+    | your application, with a plugin-specific prefix.
+    |
+    */
+
+    'migrations' => '{{slug}}_migrations',
+];
