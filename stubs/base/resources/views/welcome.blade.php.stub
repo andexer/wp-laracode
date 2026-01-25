@@ -3,7 +3,7 @@
 
 @section('content')
 <div class="wrap">
-    <h1 class="wp-heading-inline">🚀 Bienvenido a tu Plugin Laravel + WordPress</h1>
+    <h1 class="wp-heading-inline">🚀 Welcome to {{pluginName}}</h1>
 
     <div class="notice notice-success">
         <p>✅ Plugin integrado exitosamente con WordPress</p>

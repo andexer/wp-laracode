@@ -31,16 +31,16 @@ class WelcomeController
     public function createWelcomePage()
     {
         // Check if page exists
-        $existing = get_page_by_path('plugin-welcome');
+        $existing = get_page_by_path('{{slug}}-welcome');
 
         if (!$existing) {
             // Create page in WordPress
             $page_id = wp_insert_post([
-                'post_title' => 'Bienvenido al Plugin',
+                'post_title' => __('Welcome to {{pluginName}}', '{{slug}}'),
                 'post_content' => $this->getPageContent(),
                 'post_status' => 'publish',
                 'post_type' => 'page',
-                'post_name' => 'plugin-welcome',
+                'post_name' => '{{slug}}-welcome',
                 'post_author' => get_current_user_id(),
             ]);
 
