@@ -27,7 +27,8 @@
     "require-dev": {
         "pestphp/pest": "^3.0",
         "laravel/pint": "^1.0",
-        "mockery/mockery": "^1.6"
+        "mockery/mockery": "^1.6",
+        "spatie/ignition": "^1.0"
     },
     "suggest": {
         "livewire/livewire": "^4.0 - For reactive components",

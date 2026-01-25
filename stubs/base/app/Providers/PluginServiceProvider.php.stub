@@ -103,6 +103,11 @@ class PluginServiceProvider extends ServiceProvider
         if (file_exists({{constantPrefix}}_PATH . 'routes/web.php')) {
             $this->loadRoutesFrom({{constantPrefix}}_PATH . 'routes/web.php');
         }
+
+        // Register prettier error page (Ignition) in debug mode
+        if (defined('WP_DEBUG') && WP_DEBUG && class_exists(\Spatie\Ignition\Ignition::class)) {
+            \Spatie\Ignition\Ignition::make()->register();
+        }
     }
 
     /**

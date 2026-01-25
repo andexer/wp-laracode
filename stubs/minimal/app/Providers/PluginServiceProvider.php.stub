@@ -83,6 +83,9 @@ class PluginServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Minimal template has no additional boot logic
+        // Register prettier error page (Ignition) in debug mode
+        if (defined('WP_DEBUG') && WP_DEBUG && class_exists(\Spatie\Ignition\Ignition::class)) {
+            \Spatie\Ignition\Ignition::make()->register();
+        }
     }
 }
