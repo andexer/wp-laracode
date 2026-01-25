@@ -8,9 +8,9 @@ use Illuminate\Support\ServiceProvider;
 class DatabaseServiceProvider extends ServiceProvider
 {
     /**
-     * The unique connection name for this plugin to avoid collisions.
+     * The default connection name for this plugin.
      */
-    protected const CONNECTION_NAME = 'wordpress';
+    protected const CONNECTION_NAME = 'default';
 
     public function register()
     {
@@ -31,15 +31,17 @@ class DatabaseServiceProvider extends ServiceProvider
             $config = apply_filters('{{slug}}_database_config', $config);
         }
 
+        // Add the connection as 'default' so Eloquent finds it automatically
         $capsule->addConnection($config, self::CONNECTION_NAME);
 
-        // IMPORTANT: Do NOT use setAsGlobal() to prevent collisions between plugins
-        // Each plugin should use its own capsule instance
+        // Ensure this connection is the default for this capsule instance
+        $capsule->getDatabaseManager()->setDefaultConnection(self::CONNECTION_NAME);
 
-        // Boot Eloquent ORM with this capsule
+        // IMPORTANT: bootEloquent() sets the global resolver for Model classes
+        // Each plugin in wp-laracode boots its own, which is fine as they share the same WP DB
         $capsule->bootEloquent();
 
-        // Bind the capsule to the container using the connection name
+        // Bind the capsule to the container
         $this->app->singleton('db', fn() => $capsule);
         $this->app->singleton('db.connection', fn() => $capsule->getConnection(self::CONNECTION_NAME));
 

@@ -11,7 +11,7 @@ return [
     |
     */
 
-    'default' => 'wordpress',
+    'default' => 'default',
 
     /*
     |--------------------------------------------------------------------------
@@ -24,7 +24,7 @@ return [
     */
 
     'connections' => [
-        'wordpress' => [
+        'default' => [
             'driver' => 'mysql',
             'host' => defined('DB_HOST') ? DB_HOST : 'localhost',
             'port' => '3306',
