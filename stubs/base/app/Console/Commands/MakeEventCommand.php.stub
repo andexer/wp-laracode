@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 
 class MakeEventCommand extends Command
 {
-    protected $signature = 'make:event {name : The name of the event}';
+    protected $signature = 'make:event {name? : The name of the event}';
 
     protected $description = 'Create a new event class';
 
@@ -23,6 +23,15 @@ class MakeEventCommand extends Command
     public function handle(): int
     {
         $name = $this->argument('name');
+
+        if (!$name) {
+            $name = $this->ask('What is the name of the event?');
+        }
+
+        if (empty($name)) {
+            $this->error('Event name is required.');
+            return Command::FAILURE;
+        }
 
         $name = str_replace(['/', '\\'], '/', $name);
         $pathParts = explode('/', $name);

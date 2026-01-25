@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 
 class MakeProviderCommand extends Command
 {
-    protected $signature = 'make:provider {name : The name of the provider}';
+    protected $signature = 'make:provider {name? : The name of the provider}';
 
     protected $description = 'Create a new service provider class';
 
@@ -23,6 +23,15 @@ class MakeProviderCommand extends Command
     public function handle(): int
     {
         $name = $this->argument('name');
+
+        if (!$name) {
+            $name = $this->ask('What is the name of the provider?');
+        }
+
+        if (empty($name)) {
+            $this->error('Provider name is required.');
+            return Command::FAILURE;
+        }
 
         // Normalize
         $name = str_replace(['/', '\\'], '/', $name);

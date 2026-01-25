@@ -8,10 +8,12 @@ use Illuminate\Support\Str;
 class MakeModelCommand extends BaseGeneratorCommand
 {
     protected $signature = 'make:model
-        {name : The name of the model}
+        {name? : The name of the model}
         {--m|migration : Create a new migration file for the model}
         {--f|factory : Create a new factory for the model}
-        {--s|seed : Create a new seeder for the model}';
+        {--s|seed : Create a new seeder for the model}
+        {--fillable= : Comma-separated list of fillable fields}
+        {--casts= : Comma-separated list of casts (field:type)}';
 
     protected $description = 'Create a new Eloquent model';
 
@@ -20,7 +22,20 @@ class MakeModelCommand extends BaseGeneratorCommand
 
     public function handle(): int
     {
-        $parsed = $this->parseName($this->argument('name'));
+        $name = $this->argument('name');
+
+        if (!$name) {
+            $name = $this->ask('What is the name of the model?');
+        }
+
+        if (empty($name)) {
+            $this->error('Model name is required.');
+            return Command::FAILURE;
+        }
+        
+        // Suggest name from table if they entered snake_case? (Maybe too complex for now, keep simple)
+
+        $parsed = $this->parseName($name);
         $namespace = $this->getNamespace($parsed['pathParts'], 'Models');
         $path = $this->getFilePath($parsed['relativePath'], $parsed['className']);
 
@@ -28,7 +43,7 @@ class MakeModelCommand extends BaseGeneratorCommand
             return Command::FAILURE;
         }
 
-        if ($this->option('migration')) {
+        if ($this->option('migration') || $this->confirm('Create a migration?', false)) {
             $this->createMigration($parsed['className']);
         }
 
@@ -76,6 +91,26 @@ class MakeModelCommand extends BaseGeneratorCommand
     {
         $tableName = Str::snake(Str::pluralStudly($className));
 
+        $fillable = $this->option('fillable')
+            ? "['" . str_replace(',', "', '", $this->option('fillable')) . "']"
+            : "[\n        //\n    ]";
+
+        $casts = ['id' => 'integer'];
+        if ($this->option('casts')) {
+            foreach (explode(',', $this->option('casts')) as $cast) {
+                $parts = explode(':', $cast);
+                if (count($parts) === 2) {
+                    $casts[$parts[0]] = $parts[1];
+                }
+            }
+        }
+        
+        $castsString = "[\n";
+        foreach ($casts as $field => $type) {
+            $castsString .= "        '{$field}' => '{$type}',\n";
+        }
+        $castsString .= "    ]";
+
         return <<<PHP
 <?php
 
@@ -87,13 +122,9 @@ class {$className} extends Model
 {
     protected \$table = '{$tableName}';
 
-    protected \$fillable = [
-        //
-    ];
+    protected \$fillable = {$fillable};
 
-    protected \$casts = [
-        //
-    ];
+    protected \$casts = {$castsString};
 }
 PHP;
     }

@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 
 class MakeJobCommand extends Command
 {
-    protected $signature = 'make:job {name : The name of the job}';
+    protected $signature = 'make:job {name? : The name of the job}';
 
     protected $description = 'Create a new job class';
 
@@ -23,6 +23,15 @@ class MakeJobCommand extends Command
     public function handle(): int
     {
         $name = $this->argument('name');
+
+        if (!$name) {
+            $name = $this->ask('What is the name of the job?');
+        }
+
+        if (empty($name)) {
+            $this->error('Job name is required.');
+            return Command::FAILURE;
+        }
 
         $name = str_replace(['/', '\\'], '/', $name);
         $pathParts = explode('/', $name);

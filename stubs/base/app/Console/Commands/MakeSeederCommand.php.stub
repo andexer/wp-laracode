@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 
 class MakeSeederCommand extends Command
 {
-    protected $signature = 'make:seeder {name : The name of the seeder}';
+    protected $signature = 'make:seeder {name? : The name of the seeder}';
 
     protected $description = 'Create a new seeder class';
 
@@ -23,6 +23,16 @@ class MakeSeederCommand extends Command
     public function handle(): int
     {
         $name = $this->argument('name');
+
+        if (!$name) {
+            $name = $this->ask('What is the name of the seeder?');
+        }
+
+        if (empty($name)) {
+            $this->error('Seeder name is required.');
+            return Command::FAILURE;
+        }
+
         $className = Str::studly($name);
 
         $path = {{constantPrefix}}_PATH . "database/seeders/{$className}.php";

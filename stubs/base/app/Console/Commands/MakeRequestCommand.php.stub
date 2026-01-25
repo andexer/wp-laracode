@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 
 class MakeRequestCommand extends Command
 {
-    protected $signature = 'make:request {name : The name of the request}';
+    protected $signature = 'make:request {name? : The name of the request}';
 
     protected $description = 'Create a new form request class';
 

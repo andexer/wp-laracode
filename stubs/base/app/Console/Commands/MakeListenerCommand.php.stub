@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 class MakeListenerCommand extends Command
 {
     protected $signature = 'make:listener 
-        {name : The name of the listener}
+        {name? : The name of the listener}
         {--e|event= : The event class being listened for}';
 
     protected $description = 'Create a new event listener class';
@@ -25,6 +25,15 @@ class MakeListenerCommand extends Command
     public function handle(): int
     {
         $name = $this->argument('name');
+
+        if (!$name) {
+            $name = $this->ask('What is the name of the listener?');
+        }
+
+        if (empty($name)) {
+            $this->error('Listener name is required.');
+            return Command::FAILURE;
+        }
 
         $name = str_replace(['/', '\\'], '/', $name);
         $pathParts = explode('/', $name);

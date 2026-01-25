@@ -1,0 +1,93 @@
+<?php
+
+namespace {{namespace}}\Console\Commands;
+
+use Illuminate\Console\Command;
+use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Str;
+
+class AnalyzePluginCommand extends Command
+{
+    protected $signature = 'analyze:plugin
+        {--v|verbose : Detailed analysis}';
+
+    protected $description = 'Analyze the plugin structure and health';
+
+    protected $filesystem;
+
+    public function __construct(Filesystem $filesystem)
+    {
+        parent::__construct();
+        $this->filesystem = $filesystem;
+    }
+
+    public function handle(): int
+    {
+        $this->info('Analyzing Plugin Structure...');
+        $this->newLine();
+
+        $stats = [
+            'Models' => $this->countFiles('app/Models'),
+            'Controllers' => $this->countFiles('app/Http/Controllers'),
+            'Livewire Components' => $this->countFiles('app/Http/Livewire'),
+            'Views' => $this->countFiles('resources/views'),
+            'Migrations' => $this->countFiles('database/migrations'),
+        ];
+
+        $this->table(['Type', 'Count'], array_map(function($k, $v) {
+            return [$k, $v];
+        }, array_keys($stats), $stats));
+
+        $this->newLine();
+
+        // Basic Health Checks
+        $this->checkDirectoryStructure();
+        $this->checkComposerJson();
+
+        $this->info('Analysis Complete.');
+        return Command::SUCCESS;
+    }
+
+    protected function countFiles($path): int
+    {
+        $fullPath = {{constantPrefix}}_PATH . $path;
+        if (!$this->filesystem->exists($fullPath)) {
+            return 0;
+        }
+        return count($this->filesystem->files($fullPath));
+    }
+
+    protected function checkDirectoryStructure()
+    {
+        $requiredDirs = ['app', 'config', 'resources', 'vendor'];
+        $missing = [];
+
+        foreach ($requiredDirs as $dir) {
+            if (!$this->filesystem->exists({{constantPrefix}}_PATH . $dir)) {
+                $missing[] = $dir;
+            }
+        }
+
+        if (!empty($missing)) {
+            $this->error('Missing critical directories: ' . implode(', ', $missing));
+        } else {
+            $this->info('✓ Directory structure looks good.');
+        }
+    }
+
+    protected function checkComposerJson()
+    {
+        $path = {{constantPrefix}}_PATH . 'composer.json';
+        if ($this->filesystem->exists($path)) {
+            $content = json_decode($this->filesystem->get($path), true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                 $this->info('✓ composer.json is valid.');
+                 // Could check for required dependencies here
+            } else {
+                $this->error('✗ composer.json is invalid JSON.');
+            }
+        } else {
+            $this->error('✗ composer.json not found.');
+        }
+    }
+}

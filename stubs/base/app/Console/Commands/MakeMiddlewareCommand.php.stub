@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 
 class MakeMiddlewareCommand extends Command
 {
-    protected $signature = 'make:middleware {name : The name of the middleware}';
+    protected $signature = 'make:middleware {name? : The name of the middleware}';
 
     protected $description = 'Create a new middleware class';
 

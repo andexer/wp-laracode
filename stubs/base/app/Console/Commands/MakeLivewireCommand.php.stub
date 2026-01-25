@@ -14,27 +14,16 @@ class MakeLivewireCommand extends Command
      * @var string
      */
     protected $signature = 'make:livewire
-        {name : The name of the Livewire component}
+        {name? : The name of the Livewire component}
         {--force : Overwrite existing files}
         {--inline : Create an inline component without a view file}
         {--test : Generate a test file for the component}
         {--stub= : Use a specific stub}';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
     protected $description = 'Create a new Livewire component with robust validation and options';
 
-    /**
-     * @var Filesystem
-     */
     protected $filesystem;
 
-    /**
-     * Reserved PHP keywords to avoid in class names.
-     */
     protected array $reservedNames = [
         'abstract', 'and', 'array', 'as', 'break', 'callable', 'case', 'catch', 'class',
         'clone', 'const', 'continue', 'declare', 'default', 'die', 'do', 'echo', 'else',
@@ -54,31 +43,30 @@ class MakeLivewireCommand extends Command
         $this->filesystem = $filesystem;
     }
 
-    /**
-     * Execute the console command.
-     */
     public function handle(): int
     {
         $name = $this->argument('name');
 
-        // VAL 1: Empty check
+        if (!$name) {
+            $name = $this->ask('What is the name of the Livewire component?');
+        }
+
         if (empty($name)) {
             $this->error('Component name is required.');
             return Command::FAILURE;
         }
 
-        // VAL 2: Regex check (Allowing alphanumeric, dashes, underscores, and directory separators)
+        // VAL 2: Regex check
         if (!preg_match('/^[a-zA-Z][a-zA-Z0-9-\\/_\\\\]*$/', $name)) {
             $this->error('Invalid component name. Use only letters, numbers, hyphens, underscores, and slashes.');
             return Command::FAILURE;
         }
 
         $className = Str::studly($name);
-        // Normalize class name for nested directories
         $className = str_replace(['/', '\\'], '\\', $className);
-
-        // VAL 3: Reserved keywords check on the final class name (basename)
         $baseClassName = class_basename($className);
+
+        // VAL 3: Reserved keywords check
         if (in_array(strtolower($baseClassName), $this->reservedNames)) {
             $this->error("The component name '{$baseClassName}' is a reserved PHP keyword.");
             return Command::FAILURE;
@@ -88,12 +76,31 @@ class MakeLivewireCommand extends Command
         $isInline = $this->option('inline');
         $force = $this->option('force');
 
-        // Create the component class
+        // Check if component exists and suggest improvements
         $componentPath = $this->getComponentPath($className);
 
         if ($this->filesystem->exists($componentPath) && !$force) {
-            $this->error("Livewire component [{$className}] already exists! Use --force to overwrite.");
-            return Command::FAILURE;
+            $this->error("Livewire component [{$className}] already exists!");
+            
+            $suggestions = [
+                $className . 'Component',
+                $className . 'Widget', 
+                Str::singular($className),
+                Str::plural($className)
+            ];
+            
+            $this->info('Did you mean one of these?');
+            foreach ($suggestions as $suggestion) {
+                if (!$this->filesystem->exists($this->getComponentPath($suggestion))) {
+                    $this->line(" - $suggestion");
+                }
+            }
+
+            if ($this->confirm('Do you want to overwrite it?', false)) {
+                $force = true;
+            } else {
+                return Command::FAILURE;
+            }
         }
 
         $this->ensureDirectoryExists(dirname($componentPath));
@@ -107,12 +114,16 @@ class MakeLivewireCommand extends Command
             return Command::FAILURE;
         }
 
-        // Create the view (only if not inline)
         if (!$isInline) {
             $viewPath = $this->getViewPath($viewName);
 
             if ($this->filesystem->exists($viewPath) && !$force) {
-                $this->warn("View [livewire.{$viewName}] already exists. Skipping.");
+                if ($this->confirm("View [livewire.{$viewName}] already exists. Overwrite?", false)) {
+                     $this->filesystem->put($viewPath, $this->getViewStub($className));
+                     $this->info("View updated.");
+                } else {
+                    $this->warn("Skipping view creation.");
+                }
             } else {
                 $this->ensureDirectoryExists(dirname($viewPath));
                 $this->filesystem->put($viewPath, $this->getViewStub($className));
@@ -120,8 +131,8 @@ class MakeLivewireCommand extends Command
             }
         }
 
-        // Generate test if requested
-        if ($this->option('test')) {
+        // Generate test if requested or confirmed
+        if ($this->option('test') || $this->confirm('Do you want to generate a test file?', false)) {
             $this->createTest($className);
         }
 

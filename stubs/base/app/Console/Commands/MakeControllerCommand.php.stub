@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 class MakeControllerCommand extends Command
 {
     protected $signature = 'make:controller
-        {name : The name of the controller}
+        {name? : The name of the controller}
         {--invokable : Generate a single method, invokable controller}
         {--resource : Generate a resource controller}
         {--api : Generate an API resource controller}
@@ -28,6 +28,15 @@ class MakeControllerCommand extends Command
     public function handle(): int
     {
         $name = $this->argument('name');
+
+        if (!$name) {
+            $name = $this->ask('What is the name of the controller?');
+        }
+
+        if (empty($name)) {
+            $this->error('Controller name is required.');
+            return Command::FAILURE;
+        }
 
         // Normalize name for subdirectories
         $name = str_replace(['/', '\\'], '/', $name);
