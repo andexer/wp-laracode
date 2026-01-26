@@ -61,7 +61,12 @@ class Kernel extends BaseKernel
      */
     protected function commands(): void
     {
-        $this->app->setVersion('{{pluginName}}/' . {{constantPrefix}}_VERSION);
+        $this->app->setVersion({{constantPrefix}}_VERSION);
+        
+        $artisan = $this->getArtisan();
+        $artisan->setName('Laravel Framework');
+        $artisan->setVersion('{{pluginName}}/' . {{constantPrefix}}_VERSION);
+        
         $this->load(__DIR__ . '/Commands');
     }
 }

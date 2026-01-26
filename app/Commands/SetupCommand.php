@@ -76,6 +76,7 @@ class SetupCommand extends Command
 			'{{authorUrl}}' => '', // Optional
 			'{{vendor}}' => $vendor,
 			'{{license}}' => 'MIT', // Defaulting for simplicity in wizard, could ask
+			'{{version}}' => '1.0.0', // Standard initial version
 		];
 
 		$this->comment("Setting up plugin '{$pluginName}'...");

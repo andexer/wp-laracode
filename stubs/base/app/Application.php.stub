@@ -20,7 +20,7 @@ class Application extends Container implements ApplicationContract
      *
      * @var string
      */
-    const VERSION = '{{version}}';
+    protected $version = '{{version}}';
 
     /**
      * The base path for the application installation.
@@ -284,11 +284,24 @@ class Application extends Container implements ApplicationContract
     }
 
     /**
+     * Set the application version.
+     *
+     * @param  string  $version
+     * @return $this
+     */
+    public function setVersion($version)
+    {
+        $this->version = $version;
+
+        return $this;
+    }
+
+    /**
      * Get the version number of the application.
      */
     public function version()
     {
-        return static::VERSION;
+        return $this->version;
     }
 
     /*
