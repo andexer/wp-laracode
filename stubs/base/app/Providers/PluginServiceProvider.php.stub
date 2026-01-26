@@ -107,7 +107,7 @@ class PluginServiceProvider extends ServiceProvider
         // Load translations
         $this->app->make('translator')->addNamespace(
             '{{slug}}',
-            {{constantPrefix}}_PATH . 'resources/lang'
+            {{constantPrefix}}_PATH . 'lang'
         );
 
         // Load Routes

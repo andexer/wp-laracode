@@ -204,6 +204,15 @@ if (file_exists(__DIR__ . '/vendor/autoload.php')) {
 $app = require_once __DIR__ . '/bootstrap/app.php';
 
 /*
+| If the application was already loaded (e.g. by the WordPress bridge
+| during autoloading), require_once returns 'true'. In that case, we
+| retrieve the singleton instance from the Application class.
+|*/
+if ($app === true) {
+    $app = \{{namespace}}\Application::getInstance();
+}
+
+/*
 |--------------------------------------------------------------------------
 | Run The Artisan Application
 |--------------------------------------------------------------------------

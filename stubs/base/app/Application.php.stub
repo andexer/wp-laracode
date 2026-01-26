@@ -191,7 +191,7 @@ class Application extends Container implements ApplicationContract
 
     public function langPath($path = '')
     {
-        return $this->resourcePath('lang') . ($path ? DIRECTORY_SEPARATOR . $path : '');
+        return $this->basePath('lang') . ($path ? DIRECTORY_SEPARATOR . $path : '');
     }
 
     public function databasePath($path = '')
