@@ -22,7 +22,9 @@
 "illuminate/filesystem": "^12.0",
 "illuminate/events": "^12.0",
 "illuminate/routing": "^12.0",
-"illuminate/translation": "^12.0"
+"illuminate/translation": "^12.0",
+"laravel-lang/common": "^6.0",
+"laravel-lang/publisher": "^16.0"
 },
 "require-dev": {
 "pestphp/pest": "^3.0",
@@ -31,9 +33,7 @@
 "spatie/ignition": "^1.0"
 },
 "suggest": {
-"livewire/livewire": "^4.0 - For reactive components",
-"laravel-lang/common": "^6.0 - For extended language support",
-"laravel-lang/publisher": "^16.0 - For publishing language files"
+"livewire/livewire": "^4.0 - For reactive components"
 },
 "autoload": {
 "psr-4": {
