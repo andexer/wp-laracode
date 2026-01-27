@@ -123,11 +123,11 @@ class NewCommand extends Command
 
 		// Check if running as a compiled phar
 		if (str_starts_with(__FILE__, 'phar://')) {
-			return dirname(__DIR__, 2) . '/stubs/' . $template;
+			return dirname(__DIR__, 2) . '/templates/' . $template;
 		}
 
 		// Running in development
-		return base_path('stubs/' . $template);
+		return base_path('templates/' . $template);
 	}
 
 	protected function renameStubFiles(string $destinationPath, array $placeholders): void

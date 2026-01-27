@@ -1,0 +1,91 @@
+<?php
+
+namespace {{namespace}}\Bootstrap\Console;
+
+use Illuminate\Filesystem\Filesystem;
+
+/**
+ * StubRenderer - Loads and processes stub template files.
+ *
+ * This class provides a clean API for rendering stub files with placeholder replacements,
+ * separating template content from command logic.
+ */
+class StubRenderer
+{
+    public function __construct(
+        protected Filesystem $filesystem
+    ) {}
+
+    /**
+     * Render a stub template with the given replacements.
+     *
+     * @param string $stubName The name of the stub file (without .stub extension)
+     * @param array<string, string> $replacements Key-value pairs for placeholder replacement
+     * @return string The rendered content
+     * @throws \RuntimeException If the stub file is not found
+     */
+    public function render(string $stubName, array $replacements = []): string
+    {
+        $stubPath = $this->getStubPath($stubName);
+
+        if (!$this->filesystem->exists($stubPath)) {
+            throw new \RuntimeException("Stub template not found: {$stubName}.stub");
+        }
+
+        $content = $this->filesystem->get($stubPath);
+
+        foreach ($replacements as $key => $value) {
+            // Support both {{ key }} and {{key}} syntax
+            $content = str_replace(
+                ["{{ {$key} }}", "{{{$key}}}"],
+                $value,
+                $content
+            );
+        }
+
+        return $content;
+    }
+
+    /**
+     * Check if a stub template exists.
+     *
+     * @param string $stubName The name of the stub file
+     * @return bool
+     */
+    public function exists(string $stubName): bool
+    {
+        return $this->filesystem->exists($this->getStubPath($stubName));
+    }
+
+    /**
+     * Get the full path to a stub template.
+     *
+     * @param string $stubName The name of the stub file
+     * @return string
+     */
+    protected function getStubPath(string $stubName): string
+    {
+        return {{constantPrefix}}_PATH . "bootstrap/Console/templates/{$stubName}.stub";
+    }
+
+    /**
+     * Get all available stub templates.
+     *
+     * @return array<string>
+     */
+    public function getAvailableStubs(): array
+    {
+        $path = {{constantPrefix}}_PATH . 'bootstrap/Console/templates';
+        
+        if (!$this->filesystem->isDirectory($path)) {
+            return [];
+        }
+
+        $files = $this->filesystem->files($path);
+        
+        return array_map(
+            fn($file) => pathinfo($file->getFilename(), PATHINFO_FILENAME),
+            $files
+        );
+    }
+}

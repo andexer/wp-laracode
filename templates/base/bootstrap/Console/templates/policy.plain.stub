@@ -1,0 +1,40 @@
+<?php
+
+namespace {{ namespace }}\Policies;
+
+use {{ namespace }}\Models\User;
+
+class {{ className }}
+{
+    /**
+     * Determine whether the user can view the resource.
+     */
+    public function view(User $user): bool
+    {
+        return true;
+    }
+
+    /**
+     * Determine whether the user can create resources.
+     */
+    public function create(User $user): bool
+    {
+        return true;
+    }
+
+    /**
+     * Determine whether the user can update the resource.
+     */
+    public function update(User $user): bool
+    {
+        return true;
+    }
+
+    /**
+     * Determine whether the user can delete the resource.
+     */
+    public function delete(User $user): bool
+    {
+        return true;
+    }
+}

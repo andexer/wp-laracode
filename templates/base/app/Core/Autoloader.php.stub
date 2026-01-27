@@ -1,0 +1,142 @@
+<?php
+
+namespace {{namespace}}\Core;
+
+/**
+ * Autoloader - Custom class autoloader for libraries.
+ *
+ * This class provides a way to autoload third-party libraries without modifying
+ * composer.json. It complements the Composer PSR-4 autoloader.
+ *
+ * @example
+ * // Register the autoloader
+ * Autoloader::register();
+ *
+ * // Add a namespace mapping
+ * Autoloader::addNamespace('Libraries\\Pdf', MYPLUGIN_PATH . 'libraries/tcpdf/');
+ *
+ * // Now you can use classes from that namespace
+ * $pdf = new \Libraries\Pdf\TCPDF();
+ */
+class Autoloader
+{
+    /**
+     * Namespace to path mappings.
+     *
+     * @var array<string, string>
+     */
+    private static array $namespaces = [];
+
+    /**
+     * Whether the autoloader has been registered.
+     *
+     * @var bool
+     */
+    private static bool $registered = false;
+
+    /**
+     * Register the autoloader with the SPL autoloader stack.
+     *
+     * @return void
+     */
+    public static function register(): void
+    {
+        if (self::$registered) {
+            return;
+        }
+
+        spl_autoload_register([self::class, 'load'], true, true);
+        self::$registered = true;
+    }
+
+    /**
+     * Unregister the autoloader from the SPL autoloader stack.
+     *
+     * @return void
+     */
+    public static function unregister(): void
+    {
+        if (!self::$registered) {
+            return;
+        }
+
+        spl_autoload_unregister([self::class, 'load']);
+        self::$registered = false;
+    }
+
+    /**
+     * Add a namespace to path mapping.
+     *
+     * @param string $namespace The namespace prefix (without trailing backslash)
+     * @param string $path The directory path (without trailing slash)
+     * @return void
+     */
+    public static function addNamespace(string $namespace, string $path): void
+    {
+        $namespace = rtrim($namespace, '\\');
+        $path = rtrim($path, '/');
+        self::$namespaces[$namespace] = $path;
+    }
+
+    /**
+     * Remove a namespace mapping.
+     *
+     * @param string $namespace The namespace prefix to remove
+     * @return void
+     */
+    public static function removeNamespace(string $namespace): void
+    {
+        $namespace = rtrim($namespace, '\\');
+        unset(self::$namespaces[$namespace]);
+    }
+
+    /**
+     * Get all registered namespace mappings.
+     *
+     * @return array<string, string>
+     */
+    public static function getNamespaces(): array
+    {
+        return self::$namespaces;
+    }
+
+    /**
+     * Load a class file.
+     *
+     * @param string $class The fully qualified class name
+     * @return bool True if the class was loaded, false otherwise
+     */
+    private static function load(string $class): bool
+    {
+        foreach (self::$namespaces as $namespace => $path) {
+            if (!str_starts_with($class, $namespace)) {
+                continue;
+            }
+
+            // Get the relative class name
+            $relativeClass = substr($class, strlen($namespace) + 1);
+            
+            // Convert namespace separators to directory separators
+            $file = $path . '/' . str_replace('\\', '/', $relativeClass) . '.php';
+
+            if (file_exists($file)) {
+                require_once $file;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Load all classes from a directory recursively.
+     *
+     * @param string $directory The directory to scan
+     * @param string $namespace The base namespace for the directory
+     * @return void
+     */
+    public static function loadDirectory(string $directory, string $namespace): void
+    {
+        self::addNamespace($namespace, $directory);
+    }
+}

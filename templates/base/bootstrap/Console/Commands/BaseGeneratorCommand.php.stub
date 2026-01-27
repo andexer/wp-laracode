@@ -1,16 +1,17 @@
 <?php
 
-namespace {{namespace}}\Console\Commands;
+namespace {{namespace}}\Bootstrap\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
+use {{namespace}}\Bootstrap\Console\StubRenderer;
 
 /**
  * BaseGeneratorCommand - Abstract base for all make:* commands.
  *
  * Centralizes common logic like path resolution, namespace generation,
- * directory creation, and file writing.
+ * directory creation, file writing, and stub rendering.
  */
 abstract class BaseGeneratorCommand extends Command
 {
@@ -18,6 +19,11 @@ abstract class BaseGeneratorCommand extends Command
      * @var Filesystem
      */
     protected Filesystem $filesystem;
+
+    /**
+     * @var StubRenderer
+     */
+    protected StubRenderer $stubRenderer;
 
     /**
      * The type of class being generated.
@@ -44,6 +50,7 @@ abstract class BaseGeneratorCommand extends Command
     {
         parent::__construct();
         $this->filesystem = $filesystem;
+        $this->stubRenderer = new StubRenderer($filesystem);
     }
 
     /**
@@ -144,6 +151,18 @@ abstract class BaseGeneratorCommand extends Command
         $this->line("Location: <comment>{$relativePath}</comment>");
         
         return true;
+    }
+
+    /**
+     * Render a stub template with the given replacements.
+     *
+     * @param string $stubName The name of the stub file (without .stub extension)
+     * @param array<string, string> $replacements Key-value pairs for placeholder replacement
+     * @return string The rendered content
+     */
+    protected function renderStub(string $stubName, array $replacements = []): string
+    {
+        return $this->stubRenderer->render($stubName, $replacements);
     }
 
     /**

@@ -1,6 +1,6 @@
 <?php
 
-namespace {{namespace}}\Console\Commands;
+namespace {{namespace}}\Bootstrap\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
@@ -32,8 +32,6 @@ class MakeModelCommand extends BaseGeneratorCommand
             $this->error('Model name is required.');
             return Command::FAILURE;
         }
-        
-        // Suggest name from table if they entered snake_case? (Maybe too complex for now, keep simple)
 
         $parsed = $this->parseName($name);
         $namespace = $this->getNamespace($parsed['pathParts'], 'Models');
@@ -83,7 +81,11 @@ class MakeModelCommand extends BaseGeneratorCommand
         $migrationPath = {{constantPrefix}}_PATH . "database/migrations/{$timestamp}_{$migrationName}.php";
         $this->ensureDirectoryExists($migrationPath);
 
-        $this->filesystem->put($migrationPath, $this->getMigrationStub($tableName));
+        $migrationContent = $this->renderStub('migration', [
+            'tableName' => $tableName,
+        ]);
+        
+        $this->filesystem->put($migrationPath, $migrationContent);
         
         $relativeMigrationPath = str_replace({{constantPrefix}}_PATH, '', $migrationPath);
         $this->info("* Migration [{$migrationName}] created successfully.");
@@ -114,48 +116,12 @@ class MakeModelCommand extends BaseGeneratorCommand
         }
         $castsString .= "    ]";
 
-        return <<<PHP
-<?php
-
-namespace {$namespace};
-
-use Illuminate\Database\Eloquent\Model;
-
-class {$className} extends Model
-{
-    protected \$table = '{$tableName}';
-
-    protected \$fillable = {$fillable};
-
-    protected \$casts = {$castsString};
-}
-PHP;
-    }
-
-    protected function getMigrationStub(string $tableName): string
-    {
-        return <<<PHP
-<?php
-
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    public function up(): void
-    {
-        Schema::create('{$tableName}', function (Blueprint \$table) {
-            \$table->id();
-            \$table->timestamps();
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::dropIfExists('{$tableName}');
-    }
-};
-PHP;
+        return $this->renderStub('model', [
+            'namespace' => $namespace,
+            'className' => $className,
+            'tableName' => $tableName,
+            'fillable' => $fillable,
+            'casts' => $castsString,
+        ]);
     }
 }

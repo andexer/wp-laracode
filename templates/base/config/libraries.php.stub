@@ -1,0 +1,40 @@
+<?php
+
+return [
+	/*
+    |--------------------------------------------------------------------------
+    | Custom Libraries Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Register custom third-party libraries that should be autoloaded.
+    | Each library should specify its namespace and path relative to the plugin root.
+    |
+    | Example:
+    | 'pdf' => [
+    |     'namespace' => 'Libraries\\Pdf',
+    |     'path' => 'libraries/tcpdf/',
+    |     'autoload' => true,
+    | ],
+    |
+    */
+
+	'libraries' => [
+		// 'example' => [
+		//     'namespace' => 'Libraries\\Example',
+		//     'path' => 'libraries/example/',
+		//     'autoload' => true,
+		// ],
+	],
+
+	/*
+    |--------------------------------------------------------------------------
+    | Auto-Register Libraries
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, all libraries defined above with 'autoload' => true
+    | will be automatically registered with the plugin's custom autoloader.
+    |
+    */
+
+	'auto_register' => true,
+];

@@ -41,7 +41,7 @@ $app->register(new PluginServiceProvider($app));
 |
 */
 
-$app->singleton(Illuminate\Contracts\Console\Kernel::class, {{namespace}}\Console\Kernel::class);
+$app->singleton(Illuminate\Contracts\Console\Kernel::class, {{namespace}}\Bootstrap\Console\Kernel::class);
 $app->singleton(Illuminate\Contracts\Debug\ExceptionHandler::class, {{namespace}}\Exceptions\Handler::class);
 
 /*
