@@ -51,6 +51,11 @@ class LangAddCommand extends Command
 
             if (!$fs->exists($source)) {
                  $this->components->error("Locale [{$locale}] not found in vendor.");
+                 $this->line("Checked paths:");
+                 $this->line("- " . base_path("vendor/laravel-lang/locales/{$locale}"));
+                 $this->line("- " . base_path("vendor/laravel-lang/common/locales/{$locale}"));
+                 $this->line("- " . base_path("vendor/laravel-lang/locales/locales/{$locale}"));
+                 $this->line("- " . base_path("vendor/laravel-lang/publisher/source/locales/{$locale}"));
                  continue;
             }
 

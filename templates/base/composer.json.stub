@@ -38,6 +38,7 @@
 "autoload": {
 "psr-4": {
 "{{namespace}}\\": "app/",
+"{{namespace}}\\Core\\": "app/Core/",
 "{{namespace}}\\WordPress\\": "bootstrap/wordpress/",
 "{{namespace}}\\Bootstrap\\Console\\": "bootstrap/Console/"
 },
