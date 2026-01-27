@@ -14,6 +14,25 @@ use {{namespace}}\Providers\PluginServiceProvider;
 |
 */
 
+use {{namespace}}\Core\Autoloader;
+
+// Register the custom autoloader
+require_once __DIR__ . '/../app/Core/Autoloader.php';
+Autoloader::register();
+
+// Register the application namespace (already coverd by Composer, but useful for dynamic loading)
+Autoloader::addNamespace('{{namespace}}\\', realpath(__DIR__ . '/../app'));
+
+// Load custom libraries configuration
+$librariesConfig = require __DIR__ . '/../config/libraries.php';
+if ($librariesConfig['auto_register'] ?? true) {
+    foreach ($librariesConfig['libraries'] as $library) {
+        if (($library['autoload'] ?? false) && isset($library['namespace'], $library['path'])) {
+            Autoloader::addNamespace($library['namespace'], realpath(__DIR__ . '/../' . $library['path']));
+        }
+    }
+}
+
 $app = new Application(
     realpath(__DIR__ . '/../')
 );

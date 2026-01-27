@@ -52,16 +52,29 @@ class SetupCommand extends Command
 		$this->newLine();
 
 		// 1. Gather Input
-		$pluginName = $this->ask('Plugin Name', 'My Awesome Plugin');
+		$this->line("Please answer the following questions to configure your plugin:");
+		$this->newLine();
+
+		$defaultName = basename(getcwd());
+		$pluginName = $this->ask('Plugin Name', Str::headline($defaultName));
+
 		$pluginDescription = $this->ask('Description', 'A generated WordPress plugin.');
-		$authorName = $this->ask('Author Name', 'Me');
-		$authorEmail = $this->ask('Author Email', 'me@example.com');
-		$vendor = $this->ask('Vendor (for composer)', Str::slug($authorName));
+
+		$user = get_current_user();
+		$authorName = $this->ask('Author Name', $user ?: 'John Doe');
+		$authorEmail = $this->ask('Author Email', 'user@project.dev');
+
+		$defaultVendor = Str::slug($authorName);
+		if ($defaultVendor === 'me' || empty($defaultVendor)) {
+			$defaultVendor = 'vendor';
+		}
+		$vendor = $this->ask('Vendor (for composer namespace)', $defaultVendor);
+
 		$template = $this->choice('Which template would you like to use?', ['base'], 'base');
 
 		$slug = Str::slug($pluginName);
-		$namespace = Str::studly($pluginName); // Simplified default
-		$namespace = $this->ask('Namespace', $namespace);
+		$defaultNamespace = Str::studly($pluginName);
+		$namespace = $this->ask('Namespace (PHP)', $defaultNamespace);
 
 		$placeholders = [
 			'{{name}}' => $pluginName, // Provide raw name if needed
