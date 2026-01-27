@@ -1,0 +1,5 @@
+<div style="padding: 20px; text-align: center; background: #f0f0f1; border-radius: 8px;">
+	<h3>Counter Component</h3>
+	<div style="font-size: 2rem; margin: 10px 0;">{{ $count }}</div>
+	<button wire:click="increment" class="button button-primary">Increment (+)</button>
+</div>

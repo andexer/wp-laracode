@@ -1,61 +1,71 @@
-{{-- resources/views/welcome.blade.php --}}
 @extends('layouts.app')
 
 @section('content')
-<div class="wrap">
-    <h1 class="wp-heading-inline">🚀 Welcome to {{pluginName}}</h1>
+<div class="wrap {{ $slug }}-welcome-wrap">
+	<h1 class="wp-heading-inline">
+		{{ __('Welcome to', '{{slug}}') }} {{pluginName}} 🚀
+	</h1>
+	<hr class="wp-header-end">
 
-    <div class="notice notice-success">
-        <p>Plugin integrado exitosamente con WordPress</p>
-    </div>
+	<div class="notice notice-success is-dismissible">
+		<p>{{ __('Plugin integrated successfully with WordPress.', '{{slug}}') }}</p>
+	</div>
 
-    <div class="dashboard-widgets-wrap">
-        <div class="metabox-holder">
-            <div class="postbox-container" style="width: 50%;">
-                <div class="postbox">
-                    <h2 class="hndle">📊 Estadísticas del Sitio</h2>
-                    <div class="inside">
-                        <ul>
-                            <li><strong>Posts:</strong> {{ $stats['total_posts'] }}</li>
-                            <li><strong>Páginas:</strong> {{ $stats['total_pages'] }}</li>
-                            <li><strong>Usuarios:</strong> {{ $stats['total_users'] }}</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="postbox">
-                    <h2 class="hndle">📝 Posts Recientes</h2>
-                    <div class="inside">
-                        @forelse($posts as $post)
-                            <div class="item">
-                                <h4><a href="{{ get_edit_post_link($post->ID) }}">{{ $post->post_title }}</a></h4>
-                                <p>Por {{ $post->author->display_name }} - {{ $post->post_date->format('d/m/Y') }}</p>
-                            </div>
-                        @empty
-                            <p>No hay posts publicados.</p>
-                        @endforelse
-                    </div>
-                </div>
-            </div>
-
-            <div class="postbox-container" style="width: 50%;">
-                <div class="postbox">
-                    <h2 class="hndle">🔧 Acciones Rápidas</h2>
-                    <div class="inside">
-                        <p>
-                            <a href="{{ admin_url('admin.php?page=plugin-settings') }}" class="button button-primary">
-                                Configuración del Plugin
-                            </a>
-                        </p>
-                        <p>
-                            <a href="{{ admin_url('edit.php?post_type=page') }}" class="button">
-                                Ver Páginas
-                            </a>
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+	<div class="welcome-panel">
+		<div class="welcome-panel-content">
+			<h2>{{ __('Getting Started', '{{slug}}') }}</h2>
+			<p class="about-description">
+				{{ __('Thank you for using {{pluginName}}. This boilerplate helps you build modern WordPress plugins using Blade, matching the elegance of Laravel.', '{{slug}}') }}
+			</p>
+			<div class="welcome-panel-column-container">
+				<div class="welcome-panel-column">
+					<h3><span class="dashicons dashicons-chart-bar"></span> {{ __('Site Statistics', '{{slug}}') }}</h3>
+					<ul>
+						<li><strong>{{ __('Posts:', '{{slug}}') }}</strong> {{ $stats['total_posts'] }}</li>
+						<li><strong>{{ __('Pages:', '{{slug}}') }}</strong> {{ $stats['total_pages'] }}</li>
+						<li><strong>{{ __('Users:', '{{slug}}') }}</strong> {{ $stats['total_users'] }}</li>
+					</ul>
+				</div>
+				<div class="welcome-panel-column">
+					<h3><span class="dashicons dashicons-admin-post"></span> {{ __('Recent Posts', '{{slug}}') }}</h3>
+					@forelse($posts as $post)
+					<div class="recent-post-item" style="margin-bottom: 10px;">
+						<strong><a href="{{ get_edit_post_link($post->ID) }}">{{ $post->post_title }}</a></strong>
+						<br>
+						<small>{{ $post->author->display_name }} • {{ $post->post_date->format('d/m/Y') }}</small>
+					</div>
+					@empty
+					<p>{{ __('No posts found.', '{{slug}}') }}</p>
+					@endforelse
+				</div>
+				<div class="welcome-panel-column">
+					<h3><span class="dashicons dashicons-hammer"></span> {{ __('Actions', '{{slug}}') }}</h3>
+					<div class="button-group">
+						<a href="{{ admin_url('admin.php?page=plugin-settings') }}" class="button button-primary button-hero">
+							{{ __('Plugin Settings', '{{slug}}') }}
+						</a>
+						<div style="margin-top: 10px;">
+							@livewire('counter')
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 </div>
+
+<style>
+	. {
+			{
+			$slug
+		}
+	}
+
+	-welcome-wrap .welcome-panel {
+		padding: 24px;
+		background: #fff;
+		border: 1px solid #c3c4c7;
+		box-shadow: 0 1px 1px rgba(0, 0, 0, .04);
+	}
+</style>
 @endsection
