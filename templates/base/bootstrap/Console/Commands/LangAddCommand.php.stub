@@ -4,6 +4,7 @@ namespace {{namespace}}\Bootstrap\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
+use Symfony\Component\Finder\Finder;
 use LaravelLang\Publisher\Console\Add as BaseAddCommand;
 
 class LangAddCommand extends Command
@@ -35,18 +36,25 @@ class LangAddCommand extends Command
             $source = "{$vendorPath}/{$locale}";
 
             if (!$fs->exists($source)) {
-                // Try alternate structure (common/locales)
-                $source = base_path("vendor/laravel-lang/common/locales/{$locale}");
-            }
-            
-            if (!$fs->exists($source)) {
-                // Try alternate structure (locales package directly)
-                $source = base_path("vendor/laravel-lang/locales/locales/{$locale}");
-            }
+                // Smart search: look for the locale directory in vendor/laravel-lang
+                try {
+                    $finder = new Finder();
+                    $finder->in(base_path('vendor/laravel-lang'))
+                           ->directories()
+                           ->name($locale)
+                           ->depth('< 3'); // Look up to 3 levels deep
 
-            if (!$fs->exists($source)) {
-                // Last ditch: check if it's inside publisher source
-                $source = base_path("vendor/laravel-lang/publisher/source/locales/{$locale}");
+                    foreach ($finder as $dir) {
+                        // Check if it looks like a locale dir (has json or php files)
+                        if (count($fs->glob($dir->getRealPath() . '/*.json')) > 0 || count($fs->glob($dir->getRealPath() . '/*.php')) > 0) {
+                            $source = $dir->getRealPath();
+                            $this->components->info("Found locale [{$locale}] at: " . $source);
+                            break;
+                        }
+                    }
+                } catch (\Exception $e) {
+                    // Finder might fail if dir doesn't exist
+                }
             }
 
             if (!$fs->exists($source)) {
