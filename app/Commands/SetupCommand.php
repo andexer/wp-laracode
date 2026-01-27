@@ -42,9 +42,9 @@ class SetupCommand extends Command
 	 */
 	public function handle()
 	{
-		// Prevent running setup if already setup (check for stubs)
-		if (!$this->filesystem->exists(base_path('stubs'))) {
-			$this->error('Stubs directory not found. This project might already be initialized.');
+		// Prevent running setup if already setup (check for templates)
+		if (!$this->filesystem->exists(base_path('templates'))) {
+			$this->error('Templates directory not found. This project might already be initialized.');
 			return Command::FAILURE;
 		}
 
@@ -82,15 +82,15 @@ class SetupCommand extends Command
 		$this->comment("Setting up plugin '{$pluginName}'...");
 
 		// 2. Prepare Source and Destination
-		$sourcePath = base_path("stubs/{$template}");
+		$sourcePath = base_path("templates/{$template}");
 		$destinationPath = base_path();
 
-		// 3. Copy stubs to root (Overwrite)
-		// We iterate files in stub and copy them to root
-		$this->copyStubs($sourcePath, $destinationPath);
+		// 3. Copy templates to root (Overwrite)
+		// We iterate files in template and copy them to root
+		$this->copyTemplates($sourcePath, $destinationPath);
 
-		// 4. Rename specific files from stubs that are now in root
-		// The stubs folder has 'cli.stub', 'plugin.php.stub' etc. 
+		// 4. Rename specific files from templates that are now in root
+		// The templates folder has 'cli.stub', 'plugin.php.stub' etc. 
 		// We copied them as '.stub' to root. We need to rename them.
 
 		// Rename cli.stub -> slug (The Binary)
@@ -111,7 +111,7 @@ class SetupCommand extends Command
 		}
 
 		// Rename remaining .stub files recursively in root
-		$this->renameStubs($destinationPath);
+		$this->renameTemplates($destinationPath);
 
 		// 5. Replace placeholders in all files in root options
 		$this->replacePlaceholders($placeholders, $destinationPath);
@@ -119,8 +119,8 @@ class SetupCommand extends Command
 		// 6. Create storage directories for isolation
 		$this->createStorageDirectories($destinationPath);
 
-		// 7. Delete Stubs Directory (Cleanup)
-		$this->filesystem->deleteDirectory(base_path('stubs'));
+		// 7. Delete Templates Directory (Cleanup)
+		$this->filesystem->deleteDirectory(base_path('templates'));
 
 		// 7. Remove the original binary if it's different from the new one
 		if ($slug !== $this->currentBinary && $this->filesystem->exists(base_path($this->currentBinary))) {
@@ -170,7 +170,7 @@ class SetupCommand extends Command
 
 	// Removed cleanupGeneratorCommands method as it's now inline and split
 
-	protected function copyStubs($source, $destination)
+	protected function copyTemplates($source, $destination)
 	{
 		$files = $this->filesystem->allFiles($source);
 		foreach ($files as $file) {
@@ -185,7 +185,7 @@ class SetupCommand extends Command
 		}
 	}
 
-	protected function renameStubs($path)
+	protected function renameTemplates($path)
 	{
 		$files = $this->filesystem->allFiles($path);
 		foreach ($files as $file) {
