@@ -65,7 +65,7 @@ class SetupCommand extends Command
 		$authorEmail = $this->ask('Author Email', 'user@project.dev');
 
 		$defaultVendor = Str::slug($authorName);
-		if ($defaultVendor === 'me' || empty($defaultVendor)) {
+		if ($defaultVendor === 'user' || empty($defaultVendor)) {
 			$defaultVendor = 'vendor';
 		}
 		$vendor = $this->ask('Vendor (for composer namespace)', $defaultVendor);
@@ -239,6 +239,11 @@ class SetupCommand extends Command
 		$process->run(function ($type, $buffer) {
 			$this->output->write($buffer);
 		});
+
+		$this->info('Optimizing class loader...');
+		$process = new Process(['composer', 'dump-autoload', '-o'], base_path());
+		$process->setTimeout(600);
+		$process->run();
 	}
 
 	protected function createStorageDirectories(string $destinationPath): void
