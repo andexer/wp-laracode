@@ -142,8 +142,11 @@ class LivewireServiceProvider extends ServiceProvider
             return;
         }
 
-        // Output Livewire's core scripts
-        echo \Livewire\Mechanisms\FrontendAssets\FrontendAssets::scripts();
+        // Output Livewire's core scripts manually pointing to our proxy
+        // echo \Livewire\Mechanisms\FrontendAssets\FrontendAssets::scripts(); // Don't use this as it points to /livewire/...
+        
+        $assetUrl = rest_url('{{slug}}/v1/livewire.js');
+        echo '<script src="' . esc_url($assetUrl) . '" data-turbo-eval="false" data-turbolinks-eval="false"></script>';
 
         // Inject plugin-specific nonce configuration for WordPress REST API auth
         $this->outputNonceScript();
@@ -159,6 +162,7 @@ class LivewireServiceProvider extends ServiceProvider
     {
         $config = [
             'updateUri' => rest_url('{{slug}}/v1/livewire/update'),
+            'assetUrl' => rest_url('{{slug}}/v1/livewire.js'), // Use REST proxy
             'nonce' => Nonce::create(self::NONCE_ACTION),
         ];
 
@@ -186,27 +190,69 @@ HTML;
     }
 
     /**
-     * Register REST API endpoints for Livewire updates.
-     *
-     * Each plugin has its own namespaced endpoint to prevent
-     * conflicts with other wp-laracode plugins.
+     * Register REST API endpoints for Livewire.
      */
     protected function registerRestApiEndpoint(): void
     {
         add_action('rest_api_init', function () {
+            // Endpoint for Livewire updates
             register_rest_route('{{slug}}/v1', '/livewire/update', [
                 'methods' => 'POST',
                 'callback' => [$this, 'handleLivewireRequest'],
                 'permission_callback' => [$this, 'checkPermissions'],
             ]);
 
-            // Legacy endpoint for backward compatibility
+            // Endpoint for serving Livewire Assets (JS/CSS) to avoid 404s
+            register_rest_route('{{slug}}/v1', '/livewire.js', [
+                'methods' => 'GET',
+                'callback' => [$this, 'handleAssetRequest'],
+                'permission_callback' => '__return_true', // Public asset
+            ]);
+
+            register_rest_route('{{slug}}/v1', '/livewire.css', [
+                'methods' => 'GET',
+                'callback' => [$this, 'handleAssetRequest'],
+                'permission_callback' => '__return_true', // Public asset
+            ]);
+
+            // Legacy endpoint (optional)
             register_rest_route('{{slug}}/v1', '/livewire/message/(?P<name>[\w-]+)', [
                 'methods' => 'POST',
                 'callback' => [$this, 'handleLivewireRequest'],
                 'permission_callback' => [$this, 'checkPermissions'],
             ]);
         });
+    }
+
+    /**
+     * Handle Livewire Asset Requests (Proxy).
+     *
+     * @param \WP_REST_Request $request
+     */
+    public function handleAssetRequest(\WP_REST_Request $request)
+    {
+        $route = $request->get_route();
+        $isJs = str_ends_with($route, '.js');
+        $contentType = $isJs ? 'application/javascript' : 'text/css';
+        
+        // Attempt to locate the asset in the vendor directory
+        // This assumes composer install has been run
+        $baseDir = {{constantPrefix}}_PATH . 'vendor/livewire/livewire/dist';
+        $file = $isJs ? 'livewire.js' : 'livewire.css';
+        $path = $baseDir . '/' . $file;
+
+        if (!file_exists($path)) {
+             // Fallback or error
+             return new \WP_Error('asset_not_found', 'Livewire asset not found', ['status' => 404]);
+        }
+
+        $content = file_get_contents($path);
+        
+        // Return raw content with correct headers
+        header('Content-Type: ' . $contentType);
+        header('Cache-Control: public, max-age=31536000');
+        echo $content;
+        exit;
     }
 
     /**

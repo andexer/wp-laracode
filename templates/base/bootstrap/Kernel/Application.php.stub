@@ -1,6 +1,6 @@
 <?php
 
-namespace {{namespace}};
+namespace {{namespace}}\Kernel;
 
 use Illuminate\Config\Repository as ConfigRepository;
 use Illuminate\Container\Container;

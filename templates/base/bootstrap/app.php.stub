@@ -1,7 +1,7 @@
 <?php
 
-use {{namespace}}\Application;
-use {{namespace}}\Providers\PluginServiceProvider;
+use {{namespace}}\Kernel\Application;
+use {{namespace}}\Kernel\Providers\PluginServiceProvider;
 
 /*
 |--------------------------------------------------------------------------
@@ -13,25 +13,6 @@ use {{namespace}}\Providers\PluginServiceProvider;
 | the IoC container for the system binding all of the various parts.
 |
 */
-
-use {{namespace}}\Core\Autoloader;
-
-// Register the custom autoloader
-require_once __DIR__ . '/../app/Core/Autoloader.php';
-Autoloader::register();
-
-// Register the application namespace (already coverd by Composer, but useful for dynamic loading)
-Autoloader::addNamespace('{{namespace}}\\', realpath(__DIR__ . '/../app'));
-
-// Load custom libraries configuration
-$librariesConfig = require __DIR__ . '/../config/libraries.php';
-if ($librariesConfig['auto_register'] ?? true) {
-    foreach ($librariesConfig['libraries'] as $library) {
-        if (($library['autoload'] ?? false) && isset($library['namespace'], $library['path'])) {
-            Autoloader::addNamespace($library['namespace'], realpath(__DIR__ . '/../' . $library['path']));
-        }
-    }
-}
 
 $app = new Application(
     realpath(__DIR__ . '/../')
@@ -60,8 +41,8 @@ $app->register(new PluginServiceProvider($app));
 |
 */
 
-$app->singleton(Illuminate\Contracts\Console\Kernel::class, {{namespace}}\Bootstrap\Console\Kernel::class);
-$app->singleton(Illuminate\Contracts\Debug\ExceptionHandler::class, {{namespace}}\Exceptions\Handler::class);
+$app->singleton(Illuminate\Contracts\Console\Kernel::class, {{namespace}}\Kernel\Console\Kernel::class);
+$app->singleton(Illuminate\Contracts\Debug\ExceptionHandler::class, {{namespace}}\Kernel\Exceptions\Handler::class);
 
 /*
 |--------------------------------------------------------------------------

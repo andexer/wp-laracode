@@ -1,0 +1,65 @@
+<?php
+
+namespace {{namespace}}\Kernel\Services;
+
+class StorageService
+{
+    /**
+     * Ensure storage directories exist.
+     *
+     * @return void
+     */
+    public function ensureDirectories(): void
+    {
+        $directories = [
+            'storage/framework/cache',
+            'storage/framework/views',
+            'storage/framework/sessions',
+            'storage/logs',
+            'storage/app/public',
+        ];
+
+        foreach ($directories as $directory) {
+            $path = {{functionPrefix}}_base_path($directory);
+            if (!is_dir($path)) {
+                mkdir($path, 0755, true);
+            }
+        }
+    }
+
+    /**
+     * Create .htaccess to protect storage.
+     *
+     * @return void
+     */
+    public function createHtaccess(): void
+    {
+        $path = {{functionPrefix}}_storage_path('.htaccess');
+        if (!file_exists($path)) {
+            $content = "Order Deny,Allow\nDeny from all";
+            file_put_contents($path, $content);
+        }
+    }
+
+    /**
+     * Create index.php files to prevent directory listing.
+     *
+     * @return void
+     */
+    public function createIndexFiles(): void
+    {
+        $directories = [
+            'storage',
+            'storage/framework',
+            'storage/logs',
+            'storage/app',
+        ];
+
+        foreach ($directories as $dir) {
+            $path = {{functionPrefix}}_base_path($dir . '/index.php');
+            if (!file_exists($path)) {
+                file_put_contents($path, '<?php // Silence is golden.');
+            }
+        }
+    }
+}

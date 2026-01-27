@@ -1,0 +1,65 @@
+<?php
+
+namespace {{namespace}}\Kernel\Services;
+
+class CacheService
+{
+    /**
+     * Clear WordPress object cache.
+     *
+     * @return void
+     */
+    public function clearWordPressCache(): void
+    {
+        if (function_exists('wp_cache_flush')) {
+            wp_cache_flush();
+        }
+    }
+    
+    /**
+     * Clear Laravel framework cache.
+     *
+     * @return void
+     */
+    public function clearFrameworkCache(): void
+    {
+       // Implementation to clear file-based cache if needed
+    }
+
+    /**
+     * Clear plugin specific cache (alias for framework cache).
+     */
+    public function clearPluginCache(): void
+    {
+        $this->clearFrameworkCache();
+    }
+
+    /**
+     * Clear compiled views.
+     */
+    public function clearCompiledViews(): void
+    {
+        $viewPath = {{functionPrefix}}_storage_path('framework/views');
+        array_map('unlink', glob("$viewPath/*"));
+    }
+
+    /**
+     * Clear sessions.
+     */
+    public function clearSessions(): void
+    {
+        $sessionPath = {{functionPrefix}}_storage_path('framework/sessions');
+        array_map('unlink', glob("$sessionPath/*"));
+    }
+
+    /**
+     * Truncate logs.
+     */
+    public function truncateLogs(): void
+    {
+        $logPath = {{functionPrefix}}_storage_path('logs/plugin.log');
+        if (file_exists($logPath)) {
+            file_put_contents($logPath, '');
+        }
+    }
+}

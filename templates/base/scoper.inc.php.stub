@@ -1,0 +1,30 @@
+<?php
+
+use Isolated\Symfony\Component\Finder\Finder;
+
+return [
+	'prefix' => '{{namespace}}\\Vendor',
+	'finders' => [
+		Finder::create()
+			->files()
+			->ignoreVCS(true)
+			->notName('/LICENSE|.*\\.md|.*\\.dist|Makefile|composer\\.json|composer\\.lock/')
+			->exclude([
+				'doc',
+				'test',
+				'test_old',
+				'tests',
+				'Tests',
+				'vendor-bin',
+			])
+			->in('vendor'),
+	],
+	'patchers' => [
+		// Ensure WordPress globals are not prefixed if accidentally caught
+	],
+	'whitelist' => [
+		// Whitelist WordPress classes/functions
+		'WP_*',
+		'wp_*',
+	],
+];

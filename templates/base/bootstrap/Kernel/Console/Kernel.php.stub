@@ -1,6 +1,6 @@
 <?php
 
-namespace {{namespace}}\Bootstrap\Console;
+namespace {{namespace}}\Kernel\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
 use LaravelZero\Framework\Kernel as BaseKernel;

@@ -1,6 +1,6 @@
 <?php
 
-namespace {{namespace}}\Bootstrap\Console;
+namespace {{namespace}}\Kernel\Console;
 
 use Illuminate\Filesystem\Filesystem;
 
@@ -65,7 +65,7 @@ class StubRenderer
      */
     protected function getStubPath(string $stubName): string
     {
-        return {{constantPrefix}}_PATH . "bootstrap/Console/templates/{$stubName}.stub";
+        return {{constantPrefix}}_PATH . "bootstrap/Kernel/Console/templates/{$stubName}.stub";
     }
 
     /**
@@ -75,7 +75,7 @@ class StubRenderer
      */
     public function getAvailableStubs(): array
     {
-        $path = {{constantPrefix}}_PATH . 'bootstrap/Console/templates';
+        $path = {{constantPrefix}}_PATH . 'bootstrap/Kernel/Console/templates';
         
         if (!$this->filesystem->isDirectory($path)) {
             return [];

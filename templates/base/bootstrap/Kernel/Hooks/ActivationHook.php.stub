@@ -1,9 +1,9 @@
 <?php
 
-namespace {{namespace}}\WordPress\Hooks;
+namespace {{namespace}}\Kernel\Hooks;
 
-use {{namespace}}\Services\StorageService;
-use {{namespace}}\Services\CacheService;
+use {{namespace}}\Kernel\Services\StorageService;
+use {{namespace}}\Kernel\Services\CacheService;
 use {{namespace}}\Http\Controllers\WelcomeController;
 
 /**

@@ -17,7 +17,7 @@ if (! function_exists('{{functionPrefix}}_app')) {
      */
     function {{functionPrefix}}_app(?string $abstract = null, array $parameters = [])
     {
-        $app = \{{namespace}}\Application::getInstance();
+        $app = \{{namespace}}\Kernel\Application::getInstance();
 
         if (is_null($abstract)) {
             return $app;
@@ -133,7 +133,7 @@ if (! function_exists('{{functionPrefix}}_nonce')) {
      */
     function {{functionPrefix}}_nonce(string $action = ''): string
     {
-        return \{{namespace}}\Helpers\Nonce::create($action);
+        return \{{namespace}}\WordPress\Helpers\Nonce::create($action);
     }
 }
 
@@ -147,7 +147,7 @@ if (! function_exists('{{functionPrefix}}_verify_nonce')) {
      */
     function {{functionPrefix}}_verify_nonce(string $nonce, string $action = ''): bool|int
     {
-        return \{{namespace}}\Helpers\Nonce::verify($nonce, $action);
+        return \{{namespace}}\WordPress\Helpers\Nonce::verify($nonce, $action);
     }
 }
 

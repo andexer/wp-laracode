@@ -1,67 +1,71 @@
 {
-"name": "{{vendor}}/{{slug}}",
-"description": "{{description}}",
-"type": "wordpress-plugin",
-"license": "{{license}}",
-"authors": [
-{
-"name": "{{authorName}}",
-"email": "{{authorEmail}}"
-}
-],
-"require": {
-"php": "^8.2",
-"laravel-zero/framework": "^12.0",
-"illuminate/database": "^12.0",
-"illuminate/view": "^12.0",
-"illuminate/session": "^12.0",
-"illuminate/validation": "^12.0",
-"illuminate/http": "^12.0",
-"illuminate/log": "^12.0",
-"illuminate/cache": "^12.0",
-"illuminate/filesystem": "^12.0",
-"illuminate/events": "^12.0",
-"illuminate/routing": "^12.0",
-"illuminate/translation": "^12.0"
-},
-"require-dev": {
-"pestphp/pest": "^3.0",
-"laravel/pint": "^1.0",
-"mockery/mockery": "^1.6",
-"spatie/ignition": "^1.0"
-},
-"suggest": {
-"livewire/livewire": "^4.0 - For reactive components"
-},
-"autoload": {
-"psr-4": {
-"{{namespace}}\\": "app/",
-"{{namespace}}\\Core\\": "app/Core/",
-"{{namespace}}\\WordPress\\": "bootstrap/wordpress/",
-"{{namespace}}\\Bootstrap\\Console\\": "bootstrap/Console/"
-},
-"files": [
-"app/helpers.php",
-"bootstrap/wordpress/bridge.php"
-]
-},
-"config": {
-"platform": {
-"php": "8.2"
-},
-"platform-check": false,
-"vendor-dir": "vendor",
-"optimize-autoloader": true,
-"sort-packages": true,
-"allow-plugins": {
-"pestphp/pest-plugin": true
-}
-},
-"scripts": {
-"test": [
-"./vendor/bin/pest"
-]
-},
-"minimum-stability": "stable",
-"prefer-stable": true
+	"name": "{{vendor}}/{{slug}}",
+	"description": "{{description}}",
+	"type": "wordpress-plugin",
+	"license": "{{license}}",
+	"authors": [
+		{
+			"name": "{{authorName}}",
+			"email": "{{authorEmail}}"
+		}
+	],
+	"require": {
+		"php": "^8.2",
+		"laravel-zero/framework": "^12.0",
+		"illuminate/database": "^12.0",
+		"illuminate/view": "^12.0",
+		"illuminate/session": "^12.0",
+		"illuminate/validation": "^12.0",
+		"illuminate/http": "^12.0",
+		"illuminate/log": "^12.0",
+		"illuminate/cache": "^12.0",
+		"illuminate/filesystem": "^12.0",
+		"illuminate/events": "^12.0",
+		"illuminate/routing": "^12.0",
+		"illuminate/translation": "^12.0"
+	},
+	"require-dev": {
+		"pestphp/pest": "^3.0",
+		"laravel/pint": "^1.0",
+		"mockery/mockery": "^1.6",
+		"spatie/ignition": "^1.0",
+		"humbug/php-scoper": "^0.18"
+	},
+	"suggest": {
+		"livewire/livewire": "^4.0 - For reactive components"
+	},
+	"autoload": {
+		"psr-4": {
+			"{{namespace}}\\": "app/",
+			"{{namespace}}\\Core\\": "app/Core/",
+			"{{namespace}}\\WordPress\\": "bootstrap/wordpress/",
+			"{{namespace}}\\Kernel\\": "bootstrap/Kernel/"
+		},
+		"files": [
+			"bootstrap/helpers.php",
+			"bootstrap/wordpress/bridge.php"
+		]
+	},
+	"config": {
+		"platform": {
+			"php": "8.2"
+		},
+		"platform-check": false,
+		"vendor-dir": "vendor",
+		"optimize-autoloader": true,
+		"sort-packages": true,
+		"allow-plugins": {
+			"pestphp/pest-plugin": true
+		}
+	},
+	"scripts": {
+		"build": [
+			"php-scoper add-prefix"
+		],
+		"test": [
+			"./vendor/bin/pest"
+		]
+	},
+	"minimum-stability": "stable",
+	"prefer-stable": true
 }

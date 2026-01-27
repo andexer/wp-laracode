@@ -1,8 +1,8 @@
 <?php
 
-namespace {{namespace}}\WordPress\Hooks;
+namespace {{namespace}}\Kernel\Hooks;
 
-use {{namespace}}\Services\CacheService;
+use {{namespace}}\Kernel\Services\CacheService;
 
 /**
  * DeactivationHook - Handle plugin deactivation tasks.
