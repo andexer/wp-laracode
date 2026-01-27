@@ -16,8 +16,6 @@ class Kernel extends BaseKernel
         Commands\MakeControllerCommand::class,
         Commands\MakeModelCommand::class,
         Commands\MakeLivewireCommand::class,
-        Commands\LangAddCommand::class,
-        Commands\LangUpdateCommand::class,
         Commands\AnalyzePluginCommand::class,
         Commands\MigrateCommand::class,
         Commands\MigrateRollbackCommand::class,
