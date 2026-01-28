@@ -209,7 +209,7 @@ $app = require_once __DIR__ . '/bootstrap/app.php';
 | retrieve the singleton instance from the Application class.
 |*/
 if ($app === true) {
-    $app = \{{namespace}}\Application::getInstance();
+    $app = \{{namespace}}\Kernel\Application::getInstance();
 }
 
 /*
