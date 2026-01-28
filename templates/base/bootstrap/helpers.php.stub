@@ -72,6 +72,19 @@ if (! function_exists('{{functionPrefix}}_view')) {
     }
 }
 
+if (! function_exists('{{functionPrefix}}_base_path')) {
+    /**
+     * Get the path to the plugin root folder.
+     *
+     * @param string $path
+     * @return string
+     */
+    function {{functionPrefix}}_base_path(string $path = ''): string
+    {
+        return {{constantPrefix}}_PATH . ($path ? ltrim($path, DIRECTORY_SEPARATOR) : $path);
+    }
+}
+
 if (! function_exists('{{functionPrefix}}_storage_path')) {
     /**
      * Get the path to the storage folder.
