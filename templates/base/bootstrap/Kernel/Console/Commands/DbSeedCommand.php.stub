@@ -1,6 +1,6 @@
 <?php
 
-namespace {{namespace}}\Bootstrap\Console\Commands;
+namespace {{namespace}}\Kernel\Console\Commands;
 
 use {{namespace}}\Database\Seeders\DatabaseSeeder;
 use Illuminate\Console\Command;

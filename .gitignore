@@ -11,3 +11,4 @@
 /build
 /public/build
 /storage/*.key
+/test-ouput

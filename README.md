@@ -59,14 +59,15 @@ wp-laracode creates self-contained WordPress plugins with this structure:
 my-awesome-plugin/
 ├── my-awesome-plugin.php          # WordPress entry point
 ├── my-awesome-plugin              # Plugin-specific CLI binary
-├── app/                           # Laravel application structure
-│   ├── Console/                   # CLI commands
-│   ├── Http/Livewire/             # Livewire components
-│   ├── Providers/                 # Service providers
-│   └── Models/                    # Eloquent models
-├── bootstrap/app.php              # Private container instance
+├── app/                           # [USER LOGIC] Your application code
+│   ├── Http/                      # Controllers, Livewire Components
+│   ├── Models/                    # Eloquent models
+│   └── Providers/                 # AppServiceProvider (User config)
+├── bootstrap/                     # [FRAMEWORK KERNEL]
+│   ├── app.php                    # Application Bootstrapper
+│   └── Kernel/                    # Core Framework Logic (Console, Services, Hooks)
 ├── config/                        # Isolated configuration
-├── vendor/                        # Plugin's own dependencies
+├── vendor/                        # Plugin's own dependencies (Scoped)
 └── composer.json                  # Namespaced autoloading
 ```
 

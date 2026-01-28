@@ -1,11 +1,11 @@
 <?php
 
-namespace {{namespace}}\Bootstrap\Console\Commands;
+namespace {{namespace}}\Kernel\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
-use {{namespace}}\Bootstrap\Console\StubRenderer;
+use {{namespace}}\Kernel\Console\StubRenderer;
 
 /**
  * BaseGeneratorCommand - Abstract base for all make:* commands.
